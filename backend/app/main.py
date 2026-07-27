@@ -1,18 +1,13 @@
 from fastapi import FastAPI
 
-from app.database.base import Base
-from app.database.connection import engine
-
-# Import models so SQLAlchemy knows about them
-from app.models.admin import Admin
-from app.models.employee import Employee
-
-Base.metadata.create_all(bind=engine)
+from app.auth.routes import router as auth_router
 
 app = FastAPI(
     title="BuildTrack AI",
     version="1.0.0"
 )
+
+app.include_router(auth_router)
 
 
 @app.get("/")
