@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-
+from app.api.project_employee import router as project_employee_router
 # Authentication
 from app.auth.routes import router as auth_router
 
@@ -63,7 +63,7 @@ app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(contractor_router)
 app.include_router(project_router)
-
+app.include_router(project_employee_router)
 # ==========================================================
 # Root API
 # ==========================================================

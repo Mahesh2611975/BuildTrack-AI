@@ -1,4 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, Float, Boolean
+from sqlalchemy.orm import relationship
+
 from app.database.base import Base
 
 
@@ -24,3 +26,9 @@ class Employee(Base):
     joining_date = Column(Date, nullable=False)
 
     is_active = Column(Boolean, default=True)
+
+    project_employees = relationship(
+        "ProjectEmployee",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+    )

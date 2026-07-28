@@ -51,3 +51,8 @@ class Project(Base):
     )
 
     contractor = relationship("Contractor")
+    project_employees = relationship(
+        "ProjectEmployee",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

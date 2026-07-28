@@ -8,16 +8,10 @@ from alembic import context
 import os
 import sys
 
-# Add the backend folder to Python's path
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app.database.base import Base
-
-# Import all models
-from app.models.admin import Admin
-from app.models.employee import Employee
-
-
+import app.models
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
