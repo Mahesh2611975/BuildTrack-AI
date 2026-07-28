@@ -7,7 +7,7 @@ from app.config import settings
 from app.database.session import get_db
 from app.models.admin import Admin
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/swagger")
 
 
 def get_current_admin(

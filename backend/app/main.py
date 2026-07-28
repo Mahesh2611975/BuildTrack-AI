@@ -1,17 +1,78 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
+# Authentication
 from app.auth.routes import router as auth_router
 
-app = FastAPI(
-    title="BuildTrack AI",
-    version="1.0.0"
+# APIs
+from app.api.employee import router as employee_router
+from app.api.contractor import router as contractor_router
+from app.api.project import router as project_router
+
+# Custom Exceptions
+from app.core.exceptions import (
+    NotFoundException,
+    BadRequestException,
 )
 
+# Create FastAPI App
+app = FastAPI(
+    title="BuildTrack AI",
+    version="1.0.0",
+    description="AI Powered Construction Management System"
+)
+
+# ==========================================================
+# Global Exception Handlers
+# ==========================================================
+
+@app.exception_handler(NotFoundException)
+async def not_found_exception_handler(
+    request: Request,
+    exc: NotFoundException,
+):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "success": False,
+            "message": exc.message,
+            "data": None,
+        },
+    )
+
+
+@app.exception_handler(BadRequestException)
+async def bad_request_exception_handler(
+    request: Request,
+    exc: BadRequestException,
+):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "success": False,
+            "message": exc.message,
+            "data": None,
+        },
+    )
+
+# ==========================================================
+# Register Routers
+# ==========================================================
+
 app.include_router(auth_router)
+app.include_router(employee_router)
+app.include_router(contractor_router)
+app.include_router(project_router)
 
+# ==========================================================
+# Root API
+# ==========================================================
 
-@app.get("/")
+@app.get("/", tags=["Home"])
 def root():
     return {
-        "message": "Welcome to BuildTrack AI 🚀"
+        "success": True,
+        "message": "Welcome to BuildTrack AI 🚀",
+        "version": "1.0.0",
+        "data": None,
     }

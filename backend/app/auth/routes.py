@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.database.session import get_db
 from app.schemas.auth import LoginRequest, Token
@@ -41,7 +42,31 @@ def login(
         "access_token": token,
         "token_type": "bearer"
     }
+@router.post("/login/swagger", response_model=Token)
+def swagger_login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    admin = authenticate_admin(
+        db,
+        form_data.username,
+        form_data.password,
+    )
 
+    if not admin:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid username or password",
+        )
+
+    token = create_access_token(
+        {"sub": admin.username}
+    )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+    }
 
 @router.get("/me")
 def get_me(current_admin: Admin = Depends(get_current_admin)):
