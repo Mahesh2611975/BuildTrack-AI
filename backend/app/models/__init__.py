@@ -3,3 +3,4 @@ from app.models.employee import Employee
 from app.models.contractor import Contractor
 from app.models.project import Project
 from app.models.project_employee import ProjectEmployee
+from app.models.task import Task
