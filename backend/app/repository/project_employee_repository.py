@@ -11,6 +11,19 @@ class ProjectEmployeeRepository:
         project_id: int,
         employee_id: int,
     ):
+        # Check if the employee is already assigned to this project
+        existing_assignment = (
+            db.query(ProjectEmployee)
+            .filter(
+                ProjectEmployee.project_id == project_id,
+                ProjectEmployee.employee_id == employee_id,
+            )
+            .first()
+        )
+
+        if existing_assignment:
+            return None
+
         assignment = ProjectEmployee(
             project_id=project_id,
             employee_id=employee_id,
@@ -24,14 +37,33 @@ class ProjectEmployeeRepository:
 
     @staticmethod
     def get_project_employees(
-        db: Session,
-        project_id: int,
-    ):
-        return (
-            db.query(ProjectEmployee)
-            .filter(ProjectEmployee.project_id == project_id)
-            .all()
-        )
+            db: Session,
+            project_id: int,
+        ):
+            assignments = (
+                db.query(ProjectEmployee)
+                .filter(ProjectEmployee.project_id == project_id)
+                .all()
+            )
+
+            employees = []
+
+            for assignment in assignments:
+                employee = assignment.employee
+
+                employees.append(
+                    {
+                        "id": employee.id,
+                        "employee_id": employee.employee_id,
+                        "full_name": employee.full_name,
+                        "mobile_number": employee.mobile_number,
+                        "email": employee.email,
+                        "designation": employee.designation,
+                        "department": employee.department,
+                    }
+                )
+
+            return employees
 
     @staticmethod
     def remove_employee(

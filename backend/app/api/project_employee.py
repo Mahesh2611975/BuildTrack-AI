@@ -13,6 +13,9 @@ from app.services.project_employee_service import (
     ProjectEmployeeService,
 )
 
+from app.schemas.project_employee_details import (
+    ProjectEmployeeDetailsResponse,
+)
 router = APIRouter(
     prefix="/projects",
     tags=["Project Employees"],
@@ -29,16 +32,24 @@ def assign_employee(
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
-    return ProjectEmployeeService.assign_employee(
+    assignment = ProjectEmployeeService.assign_employee(
         db,
         project_id,
         request.employee_id,
     )
 
+    if assignment is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Employee is already assigned to this project.",
+        )
+
+    return assignment
+
 
 @router.get(
     "/{project_id}/employees",
-    response_model=list[ProjectEmployeeResponse],
+    response_model=list[ProjectEmployeeDetailsResponse],
 )
 def get_project_employees(
     project_id: int,
