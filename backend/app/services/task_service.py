@@ -36,7 +36,26 @@ class TaskService:
         db: Session,
     ):
         return TaskRepository.get_all_tasks(db)
-
+    
+    @staticmethod
+    def get_tasks_by_project(
+        db: Session,
+        project_id: int,
+    ):
+        return TaskRepository.get_tasks_by_project(
+            db,
+            project_id,
+        )
+    @staticmethod
+    def get_tasks_by_employee(
+        db: Session,
+        employee_id: int,
+    ):
+        return TaskRepository.get_tasks_by_employee(
+            db,
+            employee_id,
+        )
+        
     @staticmethod
     def update_task(
         db: Session,

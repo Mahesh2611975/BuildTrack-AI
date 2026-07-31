@@ -42,7 +42,32 @@ def get_all_tasks(
     current_admin=Depends(get_current_admin),
 ):
     return TaskService.get_all_tasks(db)
-
+@router.get(
+    "/project/{project_id}",
+    response_model=list[TaskResponse],
+)
+def get_tasks_by_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+    return TaskService.get_tasks_by_project(
+        db,
+        project_id,
+    )
+@router.get(
+    "/employee/{employee_id}",
+    response_model=list[TaskResponse],
+)
+def get_tasks_by_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+    return TaskService.get_tasks_by_employee(
+        db,
+        employee_id,
+    )
 
 @router.put(
     "/{task_id}",
