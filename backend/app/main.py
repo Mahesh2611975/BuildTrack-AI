@@ -6,6 +6,7 @@ from app.auth.routes import router as auth_router
 from app.models.material import Material
 from app.api.material_return import router as material_return_router
 from app.api.purchase_order import router as purchase_order_router
+from app.api.supplier import router as supplier_router
 
 # APIs
 from app.api.employee import router as employee_router
@@ -17,6 +18,9 @@ from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
 from app.api.material_issue import router as material_issue_router
 
+from app.api.project_summary import (
+    router as project_summary_router,
+)
 # Custom Exceptions
 from app.core.exceptions import (
     NotFoundException,
@@ -79,6 +83,8 @@ app.include_router(material_router)
 app.include_router(material_issue_router)
 app.include_router(material_return_router)
 app.include_router(purchase_order_router)
+app.include_router(supplier_router)
+app.include_router(project_summary_router)
 
 # ==========================================================
 # Root API

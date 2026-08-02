@@ -9,3 +9,4 @@ from app.models.material import Material
 from app.models.material_issue import MaterialIssue
 from app.models.material_return import MaterialReturn
 from app.models.purchase_order import PurchaseOrder
+from app.models.supplier import Supplier
