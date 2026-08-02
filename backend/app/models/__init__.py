@@ -5,3 +5,4 @@ from app.models.project import Project
 from app.models.project_employee import ProjectEmployee
 from app.models.task import Task
 from app.models.attendance import Attendance
+from app.models.material import Material

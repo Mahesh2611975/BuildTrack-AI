@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from app.api.project_employee import router as project_employee_router
 # Authentication
 from app.auth.routes import router as auth_router
+from app.models.material import Material
 
 # APIs
 from app.api.employee import router as employee_router
@@ -11,6 +12,7 @@ from app.api.project import router as project_router
 from app.api import task
 from app.api.dashboard import router as dashboard_router
 from app.api.attendance import router as attendance_router
+from app.api.material import router as material_router
 
 # Custom Exceptions
 from app.core.exceptions import (
@@ -70,6 +72,7 @@ app.include_router(project_employee_router)
 app.include_router(task.router)
 app.include_router(dashboard_router)
 app.include_router(attendance_router)
+app.include_router(material_router)
 
 # ==========================================================
 # Root API
