@@ -13,6 +13,7 @@ from app.api import task
 from app.api.dashboard import router as dashboard_router
 from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
+from app.api.material_issue import router as material_issue_router
 
 # Custom Exceptions
 from app.core.exceptions import (
@@ -73,6 +74,7 @@ app.include_router(task.router)
 app.include_router(dashboard_router)
 app.include_router(attendance_router)
 app.include_router(material_router)
+app.include_router(material_issue_router)
 
 # ==========================================================
 # Root API
