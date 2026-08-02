@@ -4,6 +4,7 @@ from app.api.project_employee import router as project_employee_router
 # Authentication
 from app.auth.routes import router as auth_router
 from app.models.material import Material
+from app.api.material_return import router as material_return_router
 
 # APIs
 from app.api.employee import router as employee_router
@@ -75,6 +76,7 @@ app.include_router(dashboard_router)
 app.include_router(attendance_router)
 app.include_router(material_router)
 app.include_router(material_issue_router)
+app.include_router(material_return_router)
 
 # ==========================================================
 # Root API

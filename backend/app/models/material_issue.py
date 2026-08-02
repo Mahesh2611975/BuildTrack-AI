@@ -21,7 +21,7 @@ class MaterialIssue(Base):
         ForeignKey("materials.id", ondelete="CASCADE"),
         nullable=False,
     )
-
+    
     project_id = Column(
         Integer,
         ForeignKey("projects.id", ondelete="CASCADE"),
@@ -45,3 +45,8 @@ class MaterialIssue(Base):
 
     material = relationship("Material")
     project = relationship("Project")
+
+    material_returns = relationship(
+        "MaterialReturn",
+        cascade="all, delete-orphan",
+    )
