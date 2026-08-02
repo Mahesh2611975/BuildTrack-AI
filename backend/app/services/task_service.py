@@ -55,7 +55,16 @@ class TaskService:
             db,
             employee_id,
         )
-        
+
+    @staticmethod
+    def get_tasks_by_status(
+        db: Session,
+        status: str,
+    ):
+        return TaskRepository.get_tasks_by_status(
+            db,
+            status,
+        )
     @staticmethod
     def update_task(
         db: Session,

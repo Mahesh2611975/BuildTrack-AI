@@ -68,7 +68,19 @@ def get_tasks_by_employee(
         db,
         employee_id,
     )
-
+@router.get(
+    "/status/{status}",
+    response_model=list[TaskResponse],
+)
+def get_tasks_by_status(
+    status: str,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+    return TaskService.get_tasks_by_status(
+        db,
+        status,
+    )
 @router.put(
     "/{task_id}",
     response_model=TaskResponse,

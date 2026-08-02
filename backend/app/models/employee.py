@@ -32,6 +32,11 @@ class Employee(Base):
         back_populates="employee",
         cascade="all, delete-orphan",
     )
+    attendance = relationship(
+    "Attendance",
+    back_populates="employee",
+    cascade="all, delete-orphan",
+    )
     
     tasks = relationship(
     "Task",

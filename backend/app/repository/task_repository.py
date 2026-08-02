@@ -51,7 +51,16 @@ class TaskRepository:
             .filter(Task.id == task_id)
             .first()
         )
-
+    @staticmethod
+    def get_tasks_by_status(
+        db: Session,
+        status: str,
+    ):
+        return (
+            db.query(Task)
+            .filter(Task.status == status)
+            .all()
+        )
     @staticmethod
     def update_task(
         db: Session,

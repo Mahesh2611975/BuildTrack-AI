@@ -9,6 +9,8 @@ from app.api.employee import router as employee_router
 from app.api.contractor import router as contractor_router
 from app.api.project import router as project_router
 from app.api import task
+from app.api.dashboard import router as dashboard_router
+from app.api.attendance import router as attendance_router
 
 # Custom Exceptions
 from app.core.exceptions import (
@@ -66,6 +68,8 @@ app.include_router(contractor_router)
 app.include_router(project_router)
 app.include_router(project_employee_router)
 app.include_router(task.router)
+app.include_router(dashboard_router)
+app.include_router(attendance_router)
 
 # ==========================================================
 # Root API
