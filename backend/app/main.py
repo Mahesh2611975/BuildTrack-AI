@@ -8,6 +8,7 @@ from app.api.material_return import router as material_return_router
 from app.api.purchase_order import router as purchase_order_router
 from app.api.supplier import router as supplier_router
 from app.api.expense import router as expense_router
+from app.api.equipment import router as equipment_router
 
 # APIs
 from app.api.employee import router as employee_router
@@ -87,6 +88,7 @@ app.include_router(purchase_order_router)
 app.include_router(supplier_router)
 app.include_router(project_summary_router)
 app.include_router(expense_router)
+app.include_router(equipment_router)
 
 # ==========================================================
 # Root API

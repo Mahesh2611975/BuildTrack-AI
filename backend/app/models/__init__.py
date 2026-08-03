@@ -11,3 +11,4 @@ from app.models.material_return import MaterialReturn
 from app.models.purchase_order import PurchaseOrder
 from app.models.supplier import Supplier
 from app.models.expense import Expense
+from app.models.equipment import Equipment
