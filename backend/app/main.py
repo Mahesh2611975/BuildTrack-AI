@@ -20,7 +20,9 @@ from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
 from app.api.material_issue import router as material_issue_router
 
-
+from app.api.equipment_dashboard import (
+    router as equipment_dashboard_router,
+)
 from app.api.equipment_work_log import (
     router as equipment_work_log_router,
 )
@@ -98,6 +100,7 @@ app.include_router(expense_router)
 app.include_router(equipment_router)
 app.include_router(equipment_assignment_router)
 app.include_router(equipment_work_log_router)
+app.include_router(equipment_dashboard_router)
 
 # ==========================================================
 # Root API
