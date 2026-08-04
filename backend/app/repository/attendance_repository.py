@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models.attendance import Attendance
-
+from sqlalchemy import extract
 
 class AttendanceRepository:
 
@@ -30,4 +30,21 @@ class AttendanceRepository:
             db.query(Attendance)
             .filter(Attendance.employee_id == employee_id)
             .all()
+        )
+    @staticmethod
+    def count_present_days(
+        db: Session,
+        employee_id: int,
+        year: int,
+        month: int,
+    ):
+        return (
+            db.query(Attendance)
+            .filter(
+                Attendance.employee_id == employee_id,
+                Attendance.status == "Present",
+                extract("year", Attendance.date) == year,
+                extract("month", Attendance.date) == month,
+            )
+            .count()
         )

@@ -10,7 +10,7 @@ from app.api.supplier import router as supplier_router
 from app.api.expense import router as expense_router
 from app.api.equipment import router as equipment_router
 from app.api.report import router as report_router
-
+from app.api.payroll import router as payroll_router
 # APIs
 from app.api.employee import router as employee_router
 from app.api.contractor import router as contractor_router
@@ -111,6 +111,8 @@ app.include_router(equipment_dashboard_router)
 app.include_router(budget_dashboard_router)
 app.include_router(report_router)
 app.include_router(salary_structure_router)
+app.include_router(payroll_router)
+
 
 # ==========================================================
 # Root API
