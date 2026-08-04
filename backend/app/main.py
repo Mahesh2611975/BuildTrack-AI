@@ -21,6 +21,9 @@ from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
 from app.api.material_issue import router as material_issue_router
 
+from app.api.salary_structure import (
+    router as salary_structure_router,
+)
 from app.api.budget_dashboard import (
     router as budget_dashboard_router,
 )
@@ -107,6 +110,7 @@ app.include_router(equipment_work_log_router)
 app.include_router(equipment_dashboard_router)
 app.include_router(budget_dashboard_router)
 app.include_router(report_router)
+app.include_router(salary_structure_router)
 
 # ==========================================================
 # Root API

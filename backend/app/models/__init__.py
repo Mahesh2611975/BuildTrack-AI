@@ -14,3 +14,4 @@ from app.models.expense import Expense
 from app.models.equipment import Equipment
 from app.models.equipment_assignment import EquipmentAssignment
 from app.models.equipment_work_log import EquipmentWorkLog
+from app.models.salary_structure import SalaryStructure
