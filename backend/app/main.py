@@ -20,7 +20,11 @@ from app.api.dashboard import router as dashboard_router
 from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
 from app.api.material_issue import router as material_issue_router
+from fastapi.exceptions import HTTPException
 
+from app.core.exception_handler import (
+    http_exception_handler,
+)
 from app.api.salary_structure import (
     router as salary_structure_router,
 )
@@ -113,7 +117,10 @@ app.include_router(report_router)
 app.include_router(salary_structure_router)
 app.include_router(payroll_router)
 
-
+app.add_exception_handler(
+    HTTPException,
+    http_exception_handler,
+)
 # ==========================================================
 # Root API
 # ==========================================================
