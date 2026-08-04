@@ -9,6 +9,8 @@ import PageHeader from "../../components/common/PageHeader";
 import StatCard from "../../components/dashboard/StatCard";
 import ExpenseChart from "../../components/dashboard/ExpenseChart";
 import ProjectProgress from "../../components/dashboard/ProjectProgress";
+import RecentActivities from "../../components/dashboard/RecentActivities";
+import NotificationPanel from "../../components/dashboard/NotificationPanel";
 
 function Dashboard() {
     return (
@@ -69,6 +71,20 @@ function Dashboard() {
                 <ExpenseChart />
                 <ProjectProgress />
             </Box>
+            <Box
+    sx={{
+        display: "grid",
+        gridTemplateColumns: {
+            xs: "1fr",
+            lg: "2fr 1fr",
+        },
+        gap: 3,
+        mt: 4,
+    }}
+>
+    <RecentActivities />
+    <NotificationPanel />
+</Box>
         </>
     );
 }
