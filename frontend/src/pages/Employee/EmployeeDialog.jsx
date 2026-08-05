@@ -4,7 +4,7 @@ import DialogContent from "@mui/material/DialogContent";
 
 import EmployeeForm from "./EmployeeForm";
 
-function EmployeeDialog({ open, handleClose }) {
+function EmployeeDialog({ open, handleClose, onSubmit }) {
     return (
         <Dialog
             open={open}
@@ -15,7 +15,7 @@ function EmployeeDialog({ open, handleClose }) {
             <DialogTitle>Add Employee</DialogTitle>
 
             <DialogContent>
-                <EmployeeForm />
+                <EmployeeForm onSubmit={onSubmit} />
             </DialogContent>
         </Dialog>
     );

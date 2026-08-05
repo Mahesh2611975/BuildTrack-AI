@@ -1,50 +1,80 @@
-import {
-    Grid,
-    TextField,
-    Button,
-} from "@mui/material";
+import { useState } from "react";
+import { Grid, TextField, Button } from "@mui/material";
 
-function EmployeeForm() {
+function EmployeeForm({ onSubmit }) {
+    const [formData, setFormData] = useState({
+        name: "",
+        phone: "",
+        email: "",
+        designation: "",
+    });
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
+
     return (
-        <Grid container spacing={2} mt={1}>
+        <form onSubmit={handleSubmit}>
+            <Grid container spacing={2} mt={1}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                        fullWidth
+                        label="Employee Name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                    />
+                </Grid>
 
-            <Grid size={{ xs:12, md:6 }}>
-                <TextField
-                    fullWidth
-                    label="Employee Name"
-                />
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                        fullWidth
+                        label="Phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                        fullWidth
+                        label="Email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                        fullWidth
+                        label="Designation"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleChange}
+                    />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        type="submit"
+                    >
+                        Save Employee
+                    </Button>
+                </Grid>
             </Grid>
-
-            <Grid size={{ xs:12, md:6 }}>
-                <TextField
-                    fullWidth
-                    label="Phone"
-                />
-            </Grid>
-
-            <Grid size={{ xs:12, md:6 }}>
-                <TextField
-                    fullWidth
-                    label="Email"
-                />
-            </Grid>
-
-            <Grid size={{ xs:12, md:6 }}>
-                <TextField
-                    fullWidth
-                    label="Designation"
-                />
-            </Grid>
-
-            <Grid size={{ xs:12 }}>
-                <Button
-                    variant="contained"
-                >
-                    Save Employee
-                </Button>
-            </Grid>
-
-        </Grid>
+        </form>
     );
 }
 
