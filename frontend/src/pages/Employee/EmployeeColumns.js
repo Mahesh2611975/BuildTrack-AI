@@ -19,4 +19,8 @@ export const employeeColumns = [
         field: "status",
         headerName: "Status",
     },
+    {
+        field: "actions",
+        headerName: "Actions",
+    },
 ];

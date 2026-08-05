@@ -9,9 +9,14 @@ import EmployeeDialog from "./EmployeeDialog";
 import useEmployees from "../../hooks/useEmployees";
 import { createEmployee } from "../../services/employeeService";
 
+import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
+
 function EmployeePage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
 
     const { employees, loading } = useEmployees();
 
@@ -29,6 +34,25 @@ function EmployeePage() {
             console.error(error);
             alert("Failed to add employee");
         }
+    };
+
+    // Edit
+    const handleEdit = (employee) => {
+        console.log("Edit:", employee);
+    };
+
+    // Delete
+    const handleDelete = (employee) => {
+        console.log("Delete Clicked", employee);
+
+        setSelectedEmployee(employee);
+        setDeleteOpen(true);
+    };
+
+    const confirmDelete = () => {
+        console.log("Delete Confirmed", selectedEmployee);
+
+        setDeleteOpen(false);
     };
 
     return (
@@ -49,12 +73,22 @@ function EmployeePage() {
             <EmployeeTable
                 rows={employees}
                 loading={loading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
             />
 
             <EmployeeDialog
                 open={open}
                 handleClose={() => setOpen(false)}
                 onSubmit={handleAddEmployee}
+            />
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Employee"
+                message="Are you sure you want to delete this employee?"
             />
         </>
     );
