@@ -21,7 +21,7 @@ from app.api.attendance import router as attendance_router
 from app.api.material import router as material_router
 from app.api.material_issue import router as material_issue_router
 from fastapi.exceptions import HTTPException
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.exception_handler import (
     http_exception_handler,
 )
@@ -55,7 +55,16 @@ app = FastAPI(
     version="1.0.0",
     description="AI Powered Construction Management System"
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ==========================================================
 # Global Exception Handlers
 # ==========================================================
