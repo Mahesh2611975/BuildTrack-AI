@@ -2,7 +2,7 @@ import { Box, Toolbar } from "@mui/material";
 
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
-import Dashboard from "../pages/Dashboard/Dashboard";
+import { Outlet } from "react-router-dom";
 
 function DashboardLayout() {
     return (
@@ -20,7 +20,7 @@ function DashboardLayout() {
             >
                 <Toolbar />
 
-                <Dashboard />
+                <Outlet />
             </Box>
         </Box>
     );
