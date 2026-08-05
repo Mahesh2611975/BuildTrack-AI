@@ -6,9 +6,13 @@ import SearchBar from "../../components/common/SearchBar";
 import EmployeeTable from "./EmployeeTable";
 import EmployeeDialog from "./EmployeeDialog";
 
+import useEmployees from "../../hooks/useEmployees";
+
 function EmployeePage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
+
+    const { employees, loading } = useEmployees();
 
     return (
         <>
@@ -25,7 +29,10 @@ function EmployeePage() {
                 placeholder="Search employees..."
             />
 
-            <EmployeeTable />
+            <EmployeeTable
+                rows={employees}
+                loading={loading}
+            />
 
             <EmployeeDialog
                 open={open}
