@@ -19,8 +19,16 @@ class EmployeeService:
         return EmployeeRepository.get_employee_by_id(db, employee_id)
 
     @staticmethod
-    def update_employee(db: Session, employee_id: int, employee: EmployeeUpdate):
-        return EmployeeRepository.update_employee(db, employee_id, employee)
+    def update_employee(
+        db: Session,
+        employee_id: int,
+        employee: EmployeeUpdate,
+    ):
+        return EmployeeRepository.update_employee(
+            db,
+            employee_id,
+            employee,
+        )
 
     @staticmethod
     def delete_employee(db: Session, employee_id: int):
