@@ -2,8 +2,10 @@ from datetime import date
 from pydantic import BaseModel
 
 
+from typing import Optional
+
 class ProjectCreate(BaseModel):
-    project_id: str
+    project_id: Optional[str] = None
     project_name: str
     client_name: str
     location: str
