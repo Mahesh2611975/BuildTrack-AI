@@ -7,9 +7,13 @@ import EmployeeTable from "./EmployeeTable";
 import EmployeeDialog from "./EmployeeDialog";
 
 import useEmployees from "../../hooks/useEmployees";
-import { createEmployee } from "../../services/employeeService";
+
 
 import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
+import {
+    createEmployee,
+    deleteEmployee,
+} from "../../services/employeeService";
 
 function EmployeePage() {
     const [search, setSearch] = useState("");
@@ -18,7 +22,11 @@ function EmployeePage() {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-    const { employees, loading } = useEmployees();
+    const {
+        employees,
+        loading,
+        refreshEmployees,
+    } = useEmployees();
 
     // Add Employee
     const handleAddEmployee = async (data) => {
@@ -43,16 +51,29 @@ function EmployeePage() {
 
     // Delete
     const handleDelete = (employee) => {
-        console.log("Delete Clicked", employee);
+        console.log("Delete Clicked:");
+        console.log(employee);
+        console.log("Employee ID:", employee.id);
+        console.log("All Keys:", Object.keys(employee));
 
         setSelectedEmployee(employee);
         setDeleteOpen(true);
     };
 
-    const confirmDelete = () => {
-        console.log("Delete Confirmed", selectedEmployee);
+    const confirmDelete = async () => {
+        try {
+            await deleteEmployee(selectedEmployee.id);
 
-        setDeleteOpen(false);
+            alert("Employee deleted successfully");
+
+            setDeleteOpen(false);
+
+            refreshEmployees();
+        } catch (error) {
+            console.error(error);
+
+            alert("Failed to delete employee");
+        }
     };
 
     return (

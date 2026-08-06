@@ -11,12 +11,22 @@ function EmployeeTable({
     onDelete,
 }) {
     const formattedRows = rows.map((row) => ({
-        ...row,
+        id: row.id,
+
+        employeeId: row.employee_id,
+
+        name: row.full_name,
+
+        designation: row.designation,
+
+        phone: row.mobile_number,
+
         status: (
             <StatusChip
-                status={row.status || "Active"}
+                status={row.is_active ? "Active" : "Inactive"}
             />
         ),
+
         actions: (
             <EmployeeActions
                 row={row}
