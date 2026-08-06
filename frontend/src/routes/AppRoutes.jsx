@@ -4,6 +4,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 import Dashboard from "../pages/Dashboard/Dashboard";
 import EmployeePage from "../pages/Employee/EmployeePage";
+import ProjectPage from "../pages/Project/ProjectPage";
 import Login from "../pages/Login/Login";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -12,7 +13,11 @@ function AppRoutes() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/login" element={<Login />} />
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
 
                 <Route
                     path="/"
@@ -22,13 +27,23 @@ function AppRoutes() {
                         </ProtectedRoute>
                     }
                 >
-                    <Route index element={<Dashboard />} />
+                    <Route
+                        index
+                        element={<Dashboard />}
+                    />
 
                     <Route
                         path="employees"
                         element={<EmployeePage />}
                     />
+
+                    <Route
+                        path="projects"
+                        element={<ProjectPage />}
+                    />
+
                 </Route>
+
             </Routes>
         </BrowserRouter>
     );
