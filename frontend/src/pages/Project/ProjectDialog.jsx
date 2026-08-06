@@ -8,6 +8,7 @@ function ProjectDialog({
     open,
     handleClose,
     onSubmit,
+    project = null,
 }) {
     return (
         <Dialog
@@ -17,11 +18,12 @@ function ProjectDialog({
             maxWidth="md"
         >
             <DialogTitle>
-                Add Project
+                {project ? "Edit Project" : "Add Project"}
             </DialogTitle>
 
             <DialogContent>
                 <ProjectForm
+                    project={project}
                     onSubmit={onSubmit}
                 />
             </DialogContent>

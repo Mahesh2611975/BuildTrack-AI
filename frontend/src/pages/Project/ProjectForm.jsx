@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
     Grid,
@@ -6,7 +6,7 @@ import {
     Button,
 } from "@mui/material";
 
-function ProjectForm({ onSubmit }) {
+function ProjectForm({ onSubmit, project }) {
     const [formData, setFormData] = useState({
         project_name: "",
         client_name: "",
@@ -18,6 +18,22 @@ function ProjectForm({ onSubmit }) {
         status: "Planning",
         contractor_id: "",
     });
+
+    useEffect(() => {
+        if (project) {
+            setFormData({
+                project_name: project.project_name,
+                client_name: project.client_name,
+                location: project.location,
+                description: project.description,
+                budget: project.budget,
+                start_date: project.start_date,
+                expected_end_date: project.expected_end_date,
+                status: project.status,
+                contractor_id: project.contractor_id,
+            });
+        }
+    }, [project]);
 
     const handleChange = (e) => {
         setFormData({
@@ -105,9 +121,7 @@ function ProjectForm({ onSubmit }) {
                         name="start_date"
                         value={formData.start_date}
                         onChange={handleChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
+                        InputLabelProps={{ shrink: true }}
                     />
                 </Grid>
 
@@ -118,17 +132,15 @@ function ProjectForm({ onSubmit }) {
                         name="expected_end_date"
                         value={formData.expected_end_date}
                         onChange={handleChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
+                        InputLabelProps={{ shrink: true }}
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
                     <Button
                         fullWidth
-                        type="submit"
                         variant="contained"
+                        type="submit"
                     >
                         Save Project
                     </Button>

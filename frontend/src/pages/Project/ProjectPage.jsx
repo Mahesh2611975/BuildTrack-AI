@@ -7,11 +7,18 @@ import ProjectTable from "./ProjectTable";
 import ProjectDialog from "./ProjectDialog";
 
 import useProjects from "../../hooks/useProjects";
-import { createProject } from "../../services/projectService";
+
+import {
+    createProject,
+    updateProject,
+} from "../../services/projectService";
 
 function ProjectPage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
+
+    const [selectedProject, setSelectedProject] =
+        useState(null);
 
     const {
         projects,
@@ -19,30 +26,45 @@ function ProjectPage() {
         refreshProjects,
     } = useProjects();
 
-    // Add Project
-    const handleAddProject = async (data) => {
+    // Add or Update
+    const handleSubmit = async (data) => {
         try {
-            await createProject(data);
+            if (selectedProject) {
+                await updateProject(
+                    selectedProject.id,
+                    data
+                );
 
-            alert("Project Added Successfully");
+                alert(
+                    "Project Updated Successfully"
+                );
+            } else {
+                await createProject(data);
+
+                alert(
+                    "Project Added Successfully"
+                );
+            }
 
             setOpen(false);
+            setSelectedProject(null);
 
             refreshProjects();
         } catch (error) {
             console.error(error);
-            alert("Failed to add project");
+            alert("Operation Failed");
         }
     };
 
-    // Edit Project
+    // Edit
     const handleEdit = (project) => {
-        console.log("Edit:", project);
+        setSelectedProject(project);
+        setOpen(true);
     };
 
-    // Delete Project
+    // Delete
     const handleDelete = (project) => {
-        console.log("Delete:", project);
+        console.log(project);
     };
 
     return (
@@ -51,12 +73,17 @@ function ProjectPage() {
                 title="Projects"
                 subtitle="Manage construction projects"
                 buttonText="Add Project"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                    setSelectedProject(null);
+                    setOpen(true);
+                }}
             />
 
             <SearchBar
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) =>
+                    setSearch(e.target.value)
+                }
                 placeholder="Search projects..."
             />
 
@@ -69,8 +96,12 @@ function ProjectPage() {
 
             <ProjectDialog
                 open={open}
-                handleClose={() => setOpen(false)}
-                onSubmit={handleAddProject}
+                handleClose={() => {
+                    setOpen(false);
+                    setSelectedProject(null);
+                }}
+                onSubmit={handleSubmit}
+                project={selectedProject}
             />
         </>
     );
