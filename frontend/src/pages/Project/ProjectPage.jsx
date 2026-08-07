@@ -11,15 +11,17 @@ import useProjects from "../../hooks/useProjects";
 import {
     createProject,
     updateProject,
+    deleteProject,
 } from "../../services/projectService";
 
+import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
 function ProjectPage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
 
     const [selectedProject, setSelectedProject] =
         useState(null);
-
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const {
         projects,
         loading,
@@ -64,9 +66,25 @@ function ProjectPage() {
 
     // Delete
     const handleDelete = (project) => {
-        console.log(project);
+        setSelectedProject(project);
+        setDeleteOpen(true);
     };
+    
+    const confirmDelete = async () => {
+        try {
+            await deleteProject(selectedProject.id);
 
+            alert("Project Deleted Successfully");
+
+            setDeleteOpen(false);
+            setSelectedProject(null);
+
+            refreshProjects();
+        } catch (error) {
+            console.error(error);
+            alert("Failed to delete project");
+        }
+    };
     return (
         <>
             <PageHeader
@@ -103,6 +121,15 @@ function ProjectPage() {
                 onSubmit={handleSubmit}
                 project={selectedProject}
             />
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Project"
+                message="Are you sure you want to delete this project?"
+            />
+            
         </>
     );
 }
