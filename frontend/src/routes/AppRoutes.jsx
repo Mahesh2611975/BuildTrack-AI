@@ -5,6 +5,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import EmployeePage from "../pages/Employee/EmployeePage";
 import ProjectPage from "../pages/Project/ProjectPage";
+import MaterialPage from "../pages/Material/MaterialPage";
 import Login from "../pages/Login/Login";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -40,6 +41,11 @@ function AppRoutes() {
                     <Route
                         path="projects"
                         element={<ProjectPage />}
+                    />
+
+                    <Route
+                        path="materials"
+                        element={<MaterialPage />}
                     />
 
                 </Route>
