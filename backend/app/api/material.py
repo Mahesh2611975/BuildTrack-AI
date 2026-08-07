@@ -69,14 +69,14 @@ def update_material(
     return material
 
 
-@router.delete(
-    "/{material_id}",
-)
+@router.delete("/{material_id}")
 def delete_material(
     material_id: int,
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
+    print("DELETE ROUTE HIT:", material_id)
+
     deleted = MaterialService.delete_material(
         db,
         material_id,

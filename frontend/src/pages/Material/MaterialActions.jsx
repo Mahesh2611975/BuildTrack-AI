@@ -21,7 +21,10 @@ function MaterialActions({
             <Tooltip title="Delete Material">
                 <IconButton
                     color="error"
-                    onClick={() => onDelete(row)}
+                    onClick={() => {
+                        console.log("DELETE BUTTON PRESSED");
+                        onDelete(row);
+                    }}
                 >
                     <DeleteIcon />
                 </IconButton>

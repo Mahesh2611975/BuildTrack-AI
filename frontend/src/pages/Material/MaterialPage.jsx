@@ -11,6 +11,7 @@ import useMaterials from "../../hooks/useMaterials";
 import {
     createMaterial,
     updateMaterial,
+    deleteMaterial,
 } from "../../services/materialService";
 
 function MaterialPage() {
@@ -44,7 +45,7 @@ function MaterialPage() {
             setOpen(false);
             setSelectedMaterial(null);
 
-            refreshMaterials();
+            await refreshMaterials();
         } catch (error) {
             console.error(error);
             alert("Operation Failed");
@@ -56,10 +57,33 @@ function MaterialPage() {
         setOpen(true);
     };
 
-    const handleDelete = (material) => {
-        console.log(material);
-    };
+    const handleDelete = async (material) => {
+        const confirmDelete = window.confirm(
+            `Delete ${material.material_name}?`
+        );
 
+        if (!confirmDelete) return;
+
+        try {
+            const response = await deleteMaterial(
+                material.id
+            );
+
+            console.log("DELETE RESPONSE:", response);
+
+            // Wait until new data is fetched
+            await refreshMaterials();
+
+            alert("Material Deleted Successfully");
+        } catch (error) {
+            console.error(
+                "Delete Failed:",
+                error
+            );
+
+            alert("Failed to delete material");
+        }
+    };
     return (
         <>
             <PageHeader

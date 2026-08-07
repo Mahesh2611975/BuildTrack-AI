@@ -15,8 +15,23 @@ class MaterialService:
         db: Session,
         request: MaterialCreate,
     ):
+        # Get last material
+        last_material = (
+            db.query(Material)
+            .order_by(Material.id.desc())
+            .first()
+        )
+
+        if last_material:
+            last_number = int(
+                last_material.material_code.replace("MAT", "")
+            )
+            material_code = f"MAT{last_number + 1:03d}"
+        else:
+            material_code = "MAT001"
+
         material = Material(
-            material_code=request.material_code,
+            material_code=material_code,
             material_name=request.material_name,
             category=request.category,
             unit=request.unit,
@@ -67,10 +82,15 @@ class MaterialService:
         db: Session,
         material_id: int,
     ):
+        print("=" * 50)
+        print("SERVICE DELETE ID:", material_id)
+
         material = MaterialRepository.get_material_by_id(
             db,
             material_id,
         )
+
+        print("FOUND MATERIAL:", material)
 
         if not material:
             return None
@@ -79,5 +99,8 @@ class MaterialService:
             db,
             material,
         )
+
+        print("DELETE SUCCESS")
+        print("=" * 50)
 
         return True

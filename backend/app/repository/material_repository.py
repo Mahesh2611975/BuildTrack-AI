@@ -46,5 +46,22 @@ class MaterialRepository:
         db: Session,
         material: Material,
     ):
+        print("=" * 50)
+        print("DELETE MATERIAL:", material.id)
+
         db.delete(material)
+
+        print("BEFORE COMMIT")
+
         db.commit()
+
+        print("AFTER COMMIT")
+
+        check = (
+            db.query(Material)
+            .filter(Material.id == material.id)
+            .first()
+        )
+
+        print("AFTER DELETE QUERY:", check)
+        print("=" * 50)

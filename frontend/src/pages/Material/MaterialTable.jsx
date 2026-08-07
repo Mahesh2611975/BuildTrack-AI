@@ -13,7 +13,7 @@ function MaterialTable({
     const formattedRows = rows.map((row) => ({
         id: row.id,
 
-        materialId: row.material_id,
+        materialId: row.material_code,
 
         materialName: row.material_name,
 

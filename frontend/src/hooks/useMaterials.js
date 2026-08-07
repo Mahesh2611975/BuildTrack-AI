@@ -6,15 +6,15 @@ function useMaterials() {
     const [loading, setLoading] = useState(true);
 
     const fetchMaterials = async () => {
+        setLoading(true);
         try {
             const response = await getMaterials();
+            console.log("NEW MATERIALS:", response.data);
 
             setMaterials(response.data);
         } catch (error) {
-            console.error(
-                "Failed to fetch materials",
-                error
-            );
+            console.error(error);
+                
         } finally {
             setLoading(false);
         }

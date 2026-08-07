@@ -10,7 +10,8 @@ import {
 
 function DataTable({
     columns,
-    rows,
+    rows = [],
+    loading = false,
 }) {
     return (
         <TableContainer
@@ -20,13 +21,9 @@ function DataTable({
             }}
         >
             <Table>
-
                 <TableHead>
-
                     <TableRow>
-
                         {columns.map((column) => (
-
                             <TableCell
                                 key={column.field}
                                 sx={{
@@ -35,35 +32,46 @@ function DataTable({
                             >
                                 {column.headerName}
                             </TableCell>
-
                         ))}
-
                     </TableRow>
-
                 </TableHead>
 
                 <TableBody>
-
-                    {rows.map((row, index) => (
-
-                        <TableRow key={index} hover>
-
-                            {columns.map((column) => (
-
-                                <TableCell key={column.field}>
-
-                                    {row[column.field]}
-
-                                </TableCell>
-
-                            ))}
-
+                    {loading ? (
+                        <TableRow>
+                            <TableCell
+                                colSpan={columns.length}
+                                align="center"
+                            >
+                                Loading...
+                            </TableCell>
                         </TableRow>
-
-                    ))}
-
+                    ) : rows.length === 0 ? (
+                        <TableRow>
+                            <TableCell
+                                colSpan={columns.length}
+                                align="center"
+                            >
+                                No Data Found
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        rows.map((row) => (
+                            <TableRow
+                                key={row.id}
+                                hover
+                            >
+                                {columns.map((column) => (
+                                    <TableCell
+                                        key={column.field}
+                                    >
+                                        {row[column.field]}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    )}
                 </TableBody>
-
             </Table>
         </TableContainer>
     );
