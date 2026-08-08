@@ -15,20 +15,59 @@ import {
 } from "../../services/projectService";
 
 import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
+
 function ProjectPage() {
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
 
-    const [selectedProject, setSelectedProject] =
-        useState(null);
+    const [selectedProject, setSelectedProject] = useState(null);
+
     const [deleteOpen, setDeleteOpen] = useState(false);
+
     const {
         projects,
         loading,
         refreshProjects,
     } = useProjects();
 
-    // Add or Update
+    // ================================
+    // SEARCH
+    // ================================
+
+    const filteredProjects = projects.filter((project) => {
+        const searchValue = search.toLowerCase().trim();
+
+        if (!searchValue) {
+            return true;
+        }
+
+        return (
+            project.project_id
+                ?.toLowerCase()
+                .includes(searchValue) ||
+
+            project.project_name
+                ?.toLowerCase()
+                .includes(searchValue) ||
+
+            project.client_name
+                ?.toLowerCase()
+                .includes(searchValue) ||
+
+            project.location
+                ?.toLowerCase()
+                .includes(searchValue) ||
+
+            project.status
+                ?.toLowerCase()
+                .includes(searchValue)
+        );
+    });
+
+    // ================================
+    // ADD / UPDATE
+    // ================================
+
     const handleSubmit = async (data) => {
         try {
             if (selectedProject) {
@@ -37,54 +76,93 @@ function ProjectPage() {
                     data
                 );
 
-                alert(
-                    "Project Updated Successfully"
-                );
+                alert("Project Updated Successfully");
             } else {
                 await createProject(data);
 
-                alert(
-                    "Project Added Successfully"
-                );
+                alert("Project Added Successfully");
             }
 
             setOpen(false);
             setSelectedProject(null);
 
-            refreshProjects();
+            await refreshProjects();
+
         } catch (error) {
-            console.error(error);
-            alert("Operation Failed");
+            console.error(
+                "PROJECT OPERATION ERROR:",
+                error
+            );
+
+            console.error(
+                "RESPONSE:",
+                error.response?.data
+            );
+
+            alert(
+                error.response?.data?.detail ||
+                "Operation Failed"
+            );
         }
     };
 
-    // Edit
+    // ================================
+    // EDIT
+    // ================================
+
     const handleEdit = (project) => {
         setSelectedProject(project);
         setOpen(true);
     };
 
-    // Delete
+    // ================================
+    // DELETE
+    // ================================
+
     const handleDelete = (project) => {
         setSelectedProject(project);
         setDeleteOpen(true);
     };
-    
+
     const confirmDelete = async () => {
+        if (!selectedProject) {
+            return;
+        }
+
         try {
-            await deleteProject(selectedProject.id);
+            await deleteProject(
+                selectedProject.id
+            );
 
             alert("Project Deleted Successfully");
 
             setDeleteOpen(false);
             setSelectedProject(null);
 
-            refreshProjects();
+            await refreshProjects();
+
         } catch (error) {
-            console.error(error);
-            alert("Failed to delete project");
+            console.error(
+                "DELETE PROJECT ERROR:",
+                error
+            );
+
+            console.error(
+                "RESPONSE:",
+                error.response?.data
+            );
+
+            alert(
+                error.response?.data?.detail ||
+                "Failed to delete project"
+            );
         }
     };
+
+    // ================================
+    // RENDER
+    // ================================
+
     return (
         <>
             <PageHeader
@@ -106,7 +184,7 @@ function ProjectPage() {
             />
 
             <ProjectTable
-                rows={projects}
+                rows={filteredProjects}
                 loading={loading}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
@@ -124,12 +202,18 @@ function ProjectPage() {
 
             <ConfirmDeleteDialog
                 open={deleteOpen}
-                onClose={() => setDeleteOpen(false)}
+                onClose={() => {
+                    setDeleteOpen(false);
+                    setSelectedProject(null);
+                }}
                 onConfirm={confirmDelete}
                 title="Delete Project"
-                message="Are you sure you want to delete this project?"
+                message={
+                    selectedProject
+                        ? `Are you sure you want to delete "${selectedProject.project_name}"?`
+                        : "Are you sure you want to delete this project?"
+                }
             />
-            
         </>
     );
 }

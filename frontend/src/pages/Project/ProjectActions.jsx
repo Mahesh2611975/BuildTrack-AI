@@ -1,10 +1,19 @@
-import { IconButton, Tooltip } from "@mui/material";
+import {
+    IconButton,
+    Tooltip,
+} from "@mui/material";
+
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-function ProjectActions({ row, onEdit, onDelete }) {
+function ProjectActions({
+    row,
+    onEdit,
+    onDelete,
+}) {
     return (
         <>
+            {/* EDIT */}
             <Tooltip title="Edit Project">
                 <IconButton
                     color="primary"
@@ -14,6 +23,7 @@ function ProjectActions({ row, onEdit, onDelete }) {
                 </IconButton>
             </Tooltip>
 
+            {/* DELETE */}
             <Tooltip title="Delete Project">
                 <IconButton
                     color="error"

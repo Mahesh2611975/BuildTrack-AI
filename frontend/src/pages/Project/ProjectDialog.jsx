@@ -18,7 +18,9 @@ function ProjectDialog({
             maxWidth="md"
         >
             <DialogTitle>
-                {project ? "Edit Project" : "Add Project"}
+                {project
+                    ? "Edit Project"
+                    : "Add Project"}
             </DialogTitle>
 
             <DialogContent>

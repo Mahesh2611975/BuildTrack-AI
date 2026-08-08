@@ -21,10 +21,12 @@ function ProjectTable({
 
         location: row.location,
 
-        budget: `₹${row.budget}`,
+        budget: `₹${Number(row.budget).toLocaleString("en-IN")}`,
 
         status: (
-            <StatusChip status={row.status} />
+            <StatusChip
+                status={row.status}
+            />
         ),
 
         actions: (
