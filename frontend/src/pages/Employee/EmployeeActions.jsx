@@ -1,40 +1,49 @@
-import { IconButton, Tooltip } from "@mui/material";
+import {
+    IconButton,
+    Tooltip,
+} from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+
 
 function EmployeeActions({
     row,
     onEdit,
     onDelete,
 }) {
+
     return (
         <>
             <Tooltip title="Edit Employee">
+
                 <IconButton
                     color="primary"
-                    onClick={() => {
-                        console.log("Edit Icon");
-                        onEdit(row);
-                    }}
+                    onClick={() =>
+                        onEdit(row)
+                    }
                 >
                     <EditIcon />
                 </IconButton>
+
             </Tooltip>
 
+
             <Tooltip title="Delete Employee">
+
                 <IconButton
                     color="error"
-                    onClick={() => {
-                        console.log("Delete Icon");
-                        onDelete(row);
-                    }}
+                    onClick={() =>
+                        onDelete(row)
+                    }
                 >
                     <DeleteIcon />
                 </IconButton>
+
             </Tooltip>
         </>
     );
 }
+
 
 export default EmployeeActions;

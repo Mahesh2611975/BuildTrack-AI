@@ -1,8 +1,13 @@
 import DataTable from "../../components/common/DataTable";
+
 import StatusChip from "../../components/common/StatusChip";
 
-import { employeeColumns } from "./EmployeeColumns";
+import {
+    employeeColumns,
+} from "./EmployeeColumns";
+
 import EmployeeActions from "./EmployeeActions";
+
 
 function EmployeeTable({
     rows = [],
@@ -10,31 +15,48 @@ function EmployeeTable({
     onEdit,
     onDelete,
 }) {
-    const formattedRows = rows.map((row) => ({
-        id: row.id,
 
-        employeeId: row.employee_id,
+    const formattedRows = rows.map(
+        (row) => ({
 
-        name: row.full_name,
+            id: row.id,
 
-        designation: row.designation,
+            employeeId:
+                row.employee_id,
 
-        phone: row.mobile_number,
+            fullName:
+                row.full_name,
 
-        status: (
-            <StatusChip
-                status={row.is_active ? "Active" : "Inactive"}
-            />
-        ),
+            designation:
+                row.designation,
 
-        actions: (
-            <EmployeeActions
-                row={row}
-                onEdit={onEdit}
-                onDelete={onDelete}
-            />
-        ),
-    }));
+            department:
+                row.department,
+
+            mobileNumber:
+                row.mobile_number,
+
+            status: (
+                <StatusChip
+                    status={
+                        row.is_active
+                            ? "Active"
+                            : "Inactive"
+                    }
+                />
+            ),
+
+            actions: (
+                <EmployeeActions
+                    row={row}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                />
+            ),
+
+        })
+    );
+
 
     return (
         <DataTable
@@ -44,5 +66,6 @@ function EmployeeTable({
         />
     );
 }
+
 
 export default EmployeeTable;

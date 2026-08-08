@@ -1,26 +1,38 @@
 export const employeeColumns = [
+
     {
         field: "employeeId",
         headerName: "Employee ID",
     },
+
     {
-        field: "name",
+        field: "fullName",
         headerName: "Name",
     },
+
     {
         field: "designation",
         headerName: "Designation",
     },
+
     {
-        field: "phone",
+        field: "department",
+        headerName: "Department",
+    },
+
+    {
+        field: "mobileNumber",
         headerName: "Phone",
     },
+
     {
         field: "status",
         headerName: "Status",
     },
+
     {
         field: "actions",
         headerName: "Actions",
     },
+
 ];

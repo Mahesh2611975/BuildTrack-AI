@@ -4,21 +4,46 @@ import DialogContent from "@mui/material/DialogContent";
 
 import EmployeeForm from "./EmployeeForm";
 
-function EmployeeDialog({ open, handleClose, onSubmit }) {
+
+function EmployeeDialog({
+    open,
+    handleClose,
+    onSubmit,
+    employee = null,
+}) {
+
     return (
+
         <Dialog
             open={open}
             onClose={handleClose}
             fullWidth
             maxWidth="md"
         >
-            <DialogTitle>Add Employee</DialogTitle>
+
+            <DialogTitle
+                sx={{
+                    fontWeight: "bold",
+                }}
+            >
+                {employee
+                    ? "Edit Employee"
+                    : "Add Employee"}
+            </DialogTitle>
+
 
             <DialogContent>
-                <EmployeeForm onSubmit={onSubmit} />
+
+                <EmployeeForm
+                    employee={employee}
+                    onSubmit={onSubmit}
+                />
+
             </DialogContent>
+
         </Dialog>
     );
 }
+
 
 export default EmployeeDialog;

@@ -1,4 +1,7 @@
-import { useState } from "react";
+import {
+    useMemo,
+    useState,
+} from "react";
 
 import PageHeader from "../../components/common/PageHeader";
 import SearchBar from "../../components/common/SearchBar";
@@ -8,19 +11,33 @@ import EmployeeDialog from "./EmployeeDialog";
 
 import useEmployees from "../../hooks/useEmployees";
 
-
-import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
 import {
     createEmployee,
+    updateEmployee,
     deleteEmployee,
 } from "../../services/employeeService";
 
-function EmployeePage() {
-    const [search, setSearch] = useState("");
-    const [open, setOpen] = useState(false);
+import ConfirmDeleteDialog from "../../components/common/ConfirmDeleteDialog";
 
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+function EmployeePage() {
+
+    const [search, setSearch] =
+        useState("");
+
+    const [open, setOpen] =
+        useState(false);
+
+    const [
+        selectedEmployee,
+        setSelectedEmployee,
+    ] = useState(null);
+
+    const [
+        deleteOpen,
+        setDeleteOpen,
+    ] = useState(false);
+
 
     const {
         employees,
@@ -28,91 +45,251 @@ function EmployeePage() {
         refreshEmployees,
     } = useEmployees();
 
-    // Add Employee
-    const handleAddEmployee = async (data) => {
-        try {
-            await createEmployee(data);
 
-            alert("Employee Added Successfully");
+    // =====================================================
+    // SEARCH
+    // =====================================================
+
+    const filteredEmployees = useMemo(() => {
+
+        const searchValue =
+            search.trim().toLowerCase();
+
+
+        if (!searchValue) {
+            return employees;
+        }
+
+
+        return employees.filter(
+            (employee) => {
+
+                return (
+
+                    employee.employee_id
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                    ||
+
+                    employee.full_name
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                    ||
+
+                    employee.designation
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                    ||
+
+                    employee.department
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                    ||
+
+                    employee.mobile_number
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                    ||
+
+                    employee.email
+                        ?.toLowerCase()
+                        .includes(searchValue)
+
+                );
+            }
+        );
+
+    }, [employees, search]);
+
+
+    // =====================================================
+    // ADD / UPDATE
+    // =====================================================
+
+    const handleSubmit = async (data) => {
+        try {
+            if (selectedEmployee) {
+                await updateEmployee(
+                    selectedEmployee.id,
+                    data
+                );
+
+                alert(
+                    "Employee Updated Successfully"
+                );
+            } else {
+                await createEmployee(data);
+
+                alert(
+                    "Employee Added Successfully"
+                );
+            }
 
             setOpen(false);
+            setSelectedEmployee(null);
 
-            window.location.reload();
+            await refreshEmployees();
+
         } catch (error) {
-            console.error(error);
-            alert("Failed to add employee");
+            console.error(
+                "Employee operation failed:",
+                error
+            );
+
+            const message =
+                error.response?.data?.detail ||
+                "Operation Failed";
+
+            alert(message);
         }
     };
 
-    // Edit
-    const handleEdit = (employee) => {
-        console.log("Edit:", employee);
-    };
 
-    // Delete
-    const handleDelete = (employee) => {
-        console.log("Delete Clicked:");
-        console.log(employee);
-        console.log("Employee ID:", employee.id);
-        console.log("All Keys:", Object.keys(employee));
+    // =====================================================
+    // EDIT
+    // =====================================================
+
+    const handleEdit = (employee) => {
 
         setSelectedEmployee(employee);
+
+        setOpen(true);
+    };
+
+
+    // =====================================================
+    // DELETE
+    // =====================================================
+
+    const handleDelete = (employee) => {
+
+        setSelectedEmployee(employee);
+
         setDeleteOpen(true);
     };
 
-    const confirmDelete = async () => {
-        try {
-            await deleteEmployee(selectedEmployee.id);
 
-            alert("Employee deleted successfully");
+    // =====================================================
+    // CONFIRM DELETE
+    // =====================================================
+
+    const confirmDelete = async () => {
+
+        if (!selectedEmployee) {
+            return;
+        }
+
+
+        try {
+
+            await deleteEmployee(
+                selectedEmployee.id
+            );
+
+
+            alert(
+                "Employee Deleted Successfully"
+            );
+
 
             setDeleteOpen(false);
 
-            refreshEmployees();
-        } catch (error) {
-            console.error(error);
+            setSelectedEmployee(null);
 
-            alert("Failed to delete employee");
+            await refreshEmployees();
+
+        } catch (error) {
+
+            console.error(
+                "Delete employee failed:",
+                error
+            );
+
+
+            const message =
+                error.response?.data?.detail ||
+                "Failed to delete employee";
+
+
+            alert(message);
         }
     };
 
+
     return (
+
         <>
+
             <PageHeader
                 title="Employees"
                 subtitle="Manage company employees"
                 buttonText="Add Employee"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+
+                    setSelectedEmployee(null);
+
+                    setOpen(true);
+                }}
             />
+
 
             <SearchBar
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) =>
+                    setSearch(
+                        event.target.value
+                    )
+                }
                 placeholder="Search employees..."
             />
 
+
             <EmployeeTable
-                rows={employees}
+                rows={filteredEmployees}
                 loading={loading}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
             />
 
+
             <EmployeeDialog
                 open={open}
-                handleClose={() => setOpen(false)}
-                onSubmit={handleAddEmployee}
+                handleClose={() => {
+
+                    setOpen(false);
+
+                    setSelectedEmployee(null);
+                }}
+                onSubmit={handleSubmit}
+                employee={selectedEmployee}
             />
+
 
             <ConfirmDeleteDialog
                 open={deleteOpen}
-                onClose={() => setDeleteOpen(false)}
+                onClose={() => {
+
+                    setDeleteOpen(false);
+
+                    setSelectedEmployee(null);
+                }}
                 onConfirm={confirmDelete}
                 title="Delete Employee"
-                message="Are you sure you want to delete this employee?"
+                message={
+                    selectedEmployee
+                        ? `Are you sure you want to delete ${selectedEmployee.full_name}?`
+                        : "Are you sure you want to delete this employee?"
+                }
             />
+
         </>
     );
 }
+
 
 export default EmployeePage;

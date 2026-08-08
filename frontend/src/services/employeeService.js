@@ -1,17 +1,32 @@
-    import api from "./api";
+import api from "./api";
 
-    export const getEmployees = () => {
-        return api.get("/employees");
-    };
+// Get all employees
+export const getEmployees = () => {
+    return api.get("/employees");
+};
 
-    export const createEmployee = (data) => {
-        return api.post("/employees", data);
-    };
+// Create employee
+export const createEmployee = (data) => {
+    return api.post("/employees", data);
+};
 
-    export const updateEmployee = (id, data) => {
-        return api.put(`/employees/${id}`, data);
-    };
+// Update employee
+export const updateEmployee = (id, data) => {
+    return api.put(`/employees/${id}`, data);
+};
 
-    export const deleteEmployee = (id) => {
-        return api.delete(`/employees/${id}`);
-    };
+// Delete employee
+export const deleteEmployee = async (id) => {
+    console.log("DELETE EMPLOYEE:", id);
+
+    const response = await api.delete(
+        `/employees/${id}`
+    );
+
+    console.log(
+        "DELETE EMPLOYEE RESPONSE:",
+        response
+    );
+
+    return response;
+};
