@@ -16,27 +16,57 @@ from app.database.base import Base
 class Project(Base):
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
-    project_id = Column(String(20), unique=True, nullable=False)
+    project_id = Column(
+        String(20),
+        unique=True,
+        nullable=False,
+    )
 
-    project_name = Column(String(100), nullable=False)
+    project_name = Column(
+        String(100),
+        nullable=False,
+    )
 
-    client_name = Column(String(100), nullable=False)
+    client_name = Column(
+        String(100),
+        nullable=False,
+    )
 
-    location = Column(String(255), nullable=False)
+    location = Column(
+        String(255),
+        nullable=False,
+    )
 
-    description = Column(String(500))
+    description = Column(
+        String(500),
+        nullable=True,
+    )
 
-    start_date = Column(Date, nullable=False)
+    start_date = Column(
+        Date,
+        nullable=False,
+    )
 
-    expected_end_date = Column(Date, nullable=False)
+    expected_end_date = Column(
+        Date,
+        nullable=False,
+    )
 
-    budget = Column(Float, nullable=False)
+    budget = Column(
+        Float,
+        nullable=False,
+    )
 
     status = Column(
         String(30),
-        default="Planned"
+        nullable=False,
+        default="Planned",
     )
 
     contractor_id = Column(
@@ -50,15 +80,21 @@ class Project(Base):
         server_default=func.now(),
     )
 
-    contractor = relationship("Contractor")
+    # Contractor relationship
+    contractor = relationship(
+        "Contractor"
+    )
+
+    # Project employees
     project_employees = relationship(
         "ProjectEmployee",
         back_populates="project",
         cascade="all, delete-orphan",
     )
 
+    # Tasks
     tasks = relationship(
-    "Task",
-    back_populates="project",
-    cascade="all, delete-orphan",
-)
+        "Task",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )

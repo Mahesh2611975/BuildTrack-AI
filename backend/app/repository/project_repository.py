@@ -1,56 +1,89 @@
 from sqlalchemy.orm import Session
 
 from app.models.project import Project
-from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectUpdate,
+)
 
 
 class ProjectRepository:
 
     @staticmethod
-    def create_project(db: Session, project: ProjectCreate):
-        # Get last project
+    def create_project(
+        db: Session,
+        project: ProjectCreate,
+    ):
+
+        # Find the latest project
         last_project = (
             db.query(Project)
             .order_by(Project.id.desc())
             .first()
         )
 
-        # Generate Project ID
+        # Generate project ID
         if last_project and last_project.project_id:
+
             try:
                 last_number = int(
-                    last_project.project_id.replace("PRJ", "")
+                    last_project.project_id.replace(
+                        "PRJ",
+                        ""
+                    )
                 )
+
             except ValueError:
                 last_number = last_project.id
 
-            new_project_id = f"PRJ{last_number + 1:03d}"
+            new_project_id = (
+                f"PRJ{last_number + 1:03d}"
+            )
+
         else:
             new_project_id = "PRJ001"
 
-        # Convert schema to dictionary
+        # Convert Pydantic model to dictionary
         project_data = project.model_dump()
 
-        # Override project_id
+        # Add generated project ID
         project_data["project_id"] = new_project_id
 
-        db_project = Project(**project_data)
+        # Create SQLAlchemy object
+        db_project = Project(
+            **project_data
+        )
 
         db.add(db_project)
+
         db.commit()
+
         db.refresh(db_project)
 
         return db_project
 
     @staticmethod
-    def get_all_projects(db: Session):
-        return db.query(Project).all()
+    def get_all_projects(
+        db: Session,
+    ):
 
-    @staticmethod
-    def get_project_by_id(db: Session, project_id: int):
         return (
             db.query(Project)
-            .filter(Project.id == project_id)
+            .order_by(Project.id.desc())
+            .all()
+        )
+
+    @staticmethod
+    def get_project_by_id(
+        db: Session,
+        project_id: int,
+    ):
+
+        return (
+            db.query(Project)
+            .filter(
+                Project.id == project_id
+            )
             .first()
         )
 
@@ -60,21 +93,32 @@ class ProjectRepository:
         project_id: int,
         project: ProjectUpdate,
     ):
+
         db_project = (
             db.query(Project)
-            .filter(Project.id == project_id)
+            .filter(
+                Project.id == project_id
+            )
             .first()
         )
 
         if not db_project:
             return None
 
-        update_data = project.model_dump(exclude_unset=True)
+        update_data = project.model_dump(
+            exclude_unset=True
+        )
 
         for key, value in update_data.items():
-            setattr(db_project, key, value)
+
+            setattr(
+                db_project,
+                key,
+                value,
+            )
 
         db.commit()
+
         db.refresh(db_project)
 
         return db_project
@@ -84,9 +128,12 @@ class ProjectRepository:
         db: Session,
         project_id: int,
     ):
+
         db_project = (
             db.query(Project)
-            .filter(Project.id == project_id)
+            .filter(
+                Project.id == project_id
+            )
             .first()
         )
 
@@ -94,6 +141,7 @@ class ProjectRepository:
             return None
 
         db.delete(db_project)
+
         db.commit()
 
         return db_project
