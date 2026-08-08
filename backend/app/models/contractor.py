@@ -1,4 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+)
 
 from app.database.base import Base
 
@@ -6,24 +11,65 @@ from app.database.base import Base
 class Contractor(Base):
     __tablename__ = "contractors"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+    )
 
-    contractor_id = Column(String(20), unique=True, nullable=False)
+    contractor_id = Column(
+        String(20),
+        unique=True,
+        nullable=False,
+    )
 
-    company_name = Column(String(100), nullable=False)
+    company_name = Column(
+        String(100),
+        nullable=False,
+    )
 
-    contractor_name = Column(String(100), nullable=False)
+    contractor_name = Column(
+        String(100),
+        nullable=False,
+    )
 
-    mobile_number = Column(String(15), unique=True, nullable=False)
+    mobile_number = Column(
+        String(15),
+        unique=True,
+        nullable=False,
+    )
 
-    email = Column(String(100), unique=True)
+    email = Column(
+        String(100),
+        unique=True,
+        nullable=True,
+    )
 
-    address = Column(String(255))
+    address = Column(
+        String(255),
+        nullable=True,
+    )
 
-    licence_number = Column(String(100), unique=True)
+    licence_number = Column(
+        String(100),
+        unique=True,
+        nullable=True,
+    )
 
-    gst_number = Column(String(50), unique=True)
+    gst_number = Column(
+        String(50),
+        unique=True,
+        nullable=True,
+    )
 
-    experience_years = Column(Integer, default=0)
+    experience_years = Column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
 
-    is_active = Column(Boolean, default=True)
+    is_active = Column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
