@@ -36,21 +36,25 @@ class SalaryStructure(Base):
     hra = Column(
         Float,
         default=0,
+        nullable=False,
     )
 
     allowance = Column(
         Float,
         default=0,
+        nullable=False,
     )
 
     pf = Column(
         Float,
         default=0,
+        nullable=False,
     )
 
     professional_tax = Column(
         Float,
         default=0,
+        nullable=False,
     )
 
     employee = relationship(

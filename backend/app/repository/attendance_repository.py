@@ -41,25 +41,9 @@ class AttendanceRepository:
                 Attendance.employee_id == employee_id
             )
             .order_by(
-                Attendance.date.desc(),
-                Attendance.id.desc(),
+                Attendance.date.desc()
             )
             .all()
-        )
-
-    @staticmethod
-    def get_attendance_by_employee_and_date(
-        db: Session,
-        employee_id: int,
-        attendance_date,
-    ):
-        return (
-            db.query(Attendance)
-            .filter(
-                Attendance.employee_id == employee_id,
-                Attendance.date == attendance_date,
-            )
-            .first()
         )
 
     @staticmethod
@@ -85,3 +69,57 @@ class AttendanceRepository:
             )
             .count()
         )
+
+    # =====================================================
+    # MONTHLY ATTENDANCE SUMMARY
+    # =====================================================
+
+    @staticmethod
+    def get_monthly_attendance_summary(
+        db: Session,
+        employee_id: int,
+        year: int,
+        month: int,
+    ):
+
+        records = (
+            db.query(Attendance)
+            .filter(
+                Attendance.employee_id == employee_id,
+                extract(
+                    "year",
+                    Attendance.date,
+                ) == year,
+                extract(
+                    "month",
+                    Attendance.date,
+                ) == month,
+            )
+            .all()
+        )
+
+        present_days = 0
+        half_days = 0
+        absent_days = 0
+        leave_days = 0
+
+        for record in records:
+
+            if record.status == "Present":
+                present_days += 1
+
+            elif record.status == "Half Day":
+                half_days += 1
+
+            elif record.status == "Absent":
+                absent_days += 1
+
+            elif record.status == "Leave":
+                leave_days += 1
+
+        return {
+            "present_days": present_days,
+            "half_days": half_days,
+            "absent_days": absent_days,
+            "leave_days": leave_days,
+        }

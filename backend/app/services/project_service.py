@@ -1,9 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.repository.project_repository import (
-    ProjectRepository,
-)
-
+from app.repository.project_repository import ProjectRepository
 from app.schemas.project import (
     ProjectCreate,
     ProjectUpdate,
@@ -17,7 +14,6 @@ class ProjectService:
         db: Session,
         project: ProjectCreate,
     ):
-
         return ProjectRepository.create_project(
             db,
             project,
@@ -27,7 +23,6 @@ class ProjectService:
     def get_all_projects(
         db: Session,
     ):
-
         return ProjectRepository.get_all_projects(
             db
         )
@@ -37,7 +32,6 @@ class ProjectService:
         db: Session,
         project_id: int,
     ):
-
         return ProjectRepository.get_project_by_id(
             db,
             project_id,
@@ -49,7 +43,6 @@ class ProjectService:
         project_id: int,
         project: ProjectUpdate,
     ):
-
         return ProjectRepository.update_project(
             db,
             project_id,
@@ -61,7 +54,6 @@ class ProjectService:
         db: Session,
         project_id: int,
     ):
-
         return ProjectRepository.delete_project(
             db,
             project_id,
