@@ -9,7 +9,7 @@ import MaterialPage from "../pages/Material/MaterialPage";
 import Login from "../pages/Login/Login";
 
 import ProtectedRoute from "./ProtectedRoute";
-
+import ContractorPage from "../pages/Contractor/ContractorPage";
 function AppRoutes() {
     return (
         <BrowserRouter>
@@ -47,7 +47,10 @@ function AppRoutes() {
                         path="materials"
                         element={<MaterialPage />}
                     />
-
+                    <Route
+                        path="/contractors"
+                        element={<ContractorPage />}
+                    />
                 </Route>
 
             </Routes>
