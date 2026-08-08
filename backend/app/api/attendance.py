@@ -1,15 +1,26 @@
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+)
+
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.auth.dependencies import get_current_admin
+
+from app.auth.dependencies import (
+    get_current_admin,
+)
 
 from app.schemas.attendance import (
     AttendanceCreate,
     AttendanceResponse,
 )
 
-from app.services.attendance_service import AttendanceService
+from app.services.attendance_service import (
+    AttendanceService,
+)
+
 
 router = APIRouter(
     prefix="/attendance",
@@ -17,8 +28,12 @@ router = APIRouter(
 )
 
 
+# =========================================================
+# MARK ATTENDANCE
+# =========================================================
+
 @router.post(
-    "/",
+    "",
     response_model=AttendanceResponse,
 )
 def mark_attendance(
@@ -26,22 +41,43 @@ def mark_attendance(
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
-    return AttendanceService.mark_attendance(
-        db,
-        request,
-    )
 
+    try:
+
+        return AttendanceService.mark_attendance(
+            db,
+            request,
+        )
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
+
+# =========================================================
+# GET ALL ATTENDANCE
+# =========================================================
 
 @router.get(
-    "/",
+    "",
     response_model=list[AttendanceResponse],
 )
 def get_all_attendance(
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
-    return AttendanceService.get_all_attendance(db)
 
+    return AttendanceService.get_all_attendance(
+        db
+    )
+
+
+# =========================================================
+# GET EMPLOYEE ATTENDANCE
+# =========================================================
 
 @router.get(
     "/employee/{employee_id}",
@@ -52,7 +88,20 @@ def get_employee_attendance(
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
-    return AttendanceService.get_employee_attendance(
-        db,
-        employee_id,
-    )
+
+    try:
+
+        return (
+            AttendanceService
+            .get_employee_attendance(
+                db,
+                employee_id,
+            )
+        )
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
