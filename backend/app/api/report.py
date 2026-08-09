@@ -26,7 +26,9 @@ from app.repository.attendance_repository import (
 from app.reports.attendance_report import (
     generate_attendance_report,
 )
-
+from app.reports.report_summary import (
+    generate_management_summary,
+)
 router = APIRouter(
     prefix="/reports",
     tags=["Reports"],
@@ -208,3 +210,22 @@ def attendance_report(
             )
         },
     )
+# ==========================================================
+# MANAGEMENT SUMMARY
+# ==========================================================
+
+@router.get("/summary")
+def management_summary(
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+
+    summary = generate_management_summary(
+        db
+    )
+
+    return {
+        "success": True,
+        "message": "Management summary generated successfully",
+        "data": summary,
+    }
