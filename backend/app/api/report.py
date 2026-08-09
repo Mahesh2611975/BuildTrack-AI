@@ -10,7 +10,13 @@ from app.repository.employee_repository import EmployeeRepository
 from app.reports.employee_report import (
     generate_employee_report,
 )
+from app.repository.project_repository import (
+    ProjectRepository,
+)
 
+from app.reports.project_report import (
+    generate_project_report,
+)
 router = APIRouter(
     prefix="/reports",
     tags=["Reports"],
@@ -42,5 +48,46 @@ def employee_report(
         headers={
             "Content-Disposition":
             f"attachment; filename=Employee_{employee.employee_id}.pdf"
+        },
+    )
+# ==========================================================
+# PROJECT REPORT
+# ==========================================================
+
+@router.get("/project/{project_id}")
+def project_report(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+
+    project = (
+        ProjectRepository.get_project_by_id(
+            db,
+            project_id,
+        )
+    )
+
+    if project is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Project not found",
+        )
+
+    pdf = generate_project_report(
+        project
+    )
+
+    return StreamingResponse(
+        pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+            (
+                "attachment; "
+                f"filename=Project_"
+                f"{project.project_id}.pdf"
+            )
         },
     )

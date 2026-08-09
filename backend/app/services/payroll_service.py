@@ -14,12 +14,22 @@ from app.repository.attendance_repository import (
     AttendanceRepository,
 )
 
+from app.repository.payroll_repository import (
+    PayrollRepository,
+)
+
+from app.models.payroll import Payroll
+
 from app.payroll.payroll_calculator import (
     PayrollCalculator,
 )
 
 
 class PayrollService:
+
+    # =====================================================
+    # GENERATE PAYROLL
+    # =====================================================
 
     @staticmethod
     def generate_payroll(
@@ -29,27 +39,29 @@ class PayrollService:
         month: int,
     ):
 
-        # ==========================================
+        # =================================================
         # VALIDATE MONTH
-        # ==========================================
+        # =================================================
 
         if month < 1 or month > 12:
+
             raise ValueError(
                 "Month must be between 1 and 12"
             )
 
-        # ==========================================
+        # =================================================
         # VALIDATE YEAR
-        # ==========================================
+        # =================================================
 
         if year < 2000 or year > 2100:
+
             raise ValueError(
                 "Year must be between 2000 and 2100"
             )
 
-        # ==========================================
+        # =================================================
         # FIND EMPLOYEE
-        # ==========================================
+        # =================================================
 
         employee = (
             EmployeeRepository.get_employee_by_id(
@@ -61,9 +73,9 @@ class PayrollService:
         if employee is None:
             return None
 
-        # ==========================================
+        # =================================================
         # FIND SALARY STRUCTURE
-        # ==========================================
+        # =================================================
 
         salary = (
             SalaryStructureRepository
@@ -76,9 +88,9 @@ class PayrollService:
         if salary is None:
             return "salary_not_found"
 
-        # ==========================================
+        # =================================================
         # GET MONTHLY ATTENDANCE
-        # ==========================================
+        # =================================================
 
         attendance = (
             AttendanceRepository
@@ -90,26 +102,34 @@ class PayrollService:
             )
         )
 
-        present_days = attendance["present_days"]
+        present_days = attendance[
+            "present_days"
+        ]
 
-        half_days = attendance["half_days"]
+        half_days = attendance[
+            "half_days"
+        ]
 
-        absent_days = attendance["absent_days"]
+        absent_days = attendance[
+            "absent_days"
+        ]
 
-        leave_days = attendance["leave_days"]
+        leave_days = attendance[
+            "leave_days"
+        ]
 
-        # ==========================================
+        # =================================================
         # TOTAL DAYS IN MONTH
-        # ==========================================
+        # =================================================
 
         total_working_days = monthrange(
             year,
             month,
         )[1]
 
-        # ==========================================
+        # =================================================
         # CALCULATE PAYROLL
-        # ==========================================
+        # =================================================
 
         payroll = PayrollCalculator.calculate(
             salary_structure=salary,
@@ -120,16 +140,397 @@ class PayrollService:
             total_working_days=total_working_days,
         )
 
-        # ==========================================
+        # =================================================
         # EMPLOYEE INFORMATION
-        # ==========================================
+        # =================================================
 
-        payroll["employee_name"] = employee.full_name
+        payroll["employee_name"] = (
+            employee.full_name
+        )
 
-        payroll["employee_id"] = employee.employee_id
+        # Employee business ID
+        # Example: EMP001
+        payroll["employee_id"] = (
+            employee.employee_id
+        )
+
+        # Actual database primary key
+        payroll["employee_db_id"] = (
+            employee.id
+        )
 
         payroll["month"] = month
 
         payroll["year"] = year
 
         return payroll
+
+
+    # =====================================================
+    # SAVE PAYROLL
+    # =====================================================
+
+    @staticmethod
+    def save_payroll(
+        db: Session,
+        payroll_data: dict,
+    ):
+
+        employee_id = payroll_data[
+            "employee_db_id"
+        ]
+
+        year = payroll_data[
+            "year"
+        ]
+
+        month = payroll_data[
+            "month"
+        ]
+
+        # =================================================
+        # CHECK EXISTING PAYROLL
+        # =================================================
+
+        existing_payroll = (
+            PayrollRepository
+            .get_monthly_payroll(
+                db,
+                employee_id,
+                year,
+                month,
+            )
+        )
+
+        # =================================================
+        # UPDATE EXISTING PAYROLL
+        # =================================================
+
+        if existing_payroll:
+
+            existing_payroll.employee_name = (
+                payroll_data[
+                    "employee_name"
+                ]
+            )
+
+            existing_payroll.employee_code = (
+                payroll_data[
+                    "employee_id"
+                ]
+            )
+
+            existing_payroll.month = (
+                month
+            )
+
+            existing_payroll.year = (
+                year
+            )
+
+            existing_payroll.total_working_days = (
+                payroll_data[
+                    "total_working_days"
+                ]
+            )
+
+            existing_payroll.present_days = (
+                payroll_data[
+                    "present_days"
+                ]
+            )
+
+            existing_payroll.half_days = (
+                payroll_data[
+                    "half_days"
+                ]
+            )
+
+            existing_payroll.absent_days = (
+                payroll_data[
+                    "absent_days"
+                ]
+            )
+
+            existing_payroll.leave_days = (
+                payroll_data[
+                    "leave_days"
+                ]
+            )
+
+            existing_payroll.paid_days = (
+                payroll_data[
+                    "paid_days"
+                ]
+            )
+
+            existing_payroll.basic_salary = (
+                payroll_data[
+                    "basic_salary"
+                ]
+            )
+
+            existing_payroll.hra = (
+                payroll_data[
+                    "hra"
+                ]
+            )
+
+            existing_payroll.allowance = (
+                payroll_data[
+                    "allowance"
+                ]
+            )
+
+            existing_payroll.gross_salary = (
+                payroll_data[
+                    "gross_salary"
+                ]
+            )
+
+            existing_payroll.daily_salary = (
+                payroll_data[
+                    "daily_salary"
+                ]
+            )
+
+            existing_payroll.earned_salary = (
+                payroll_data[
+                    "earned_salary"
+                ]
+            )
+
+            existing_payroll.pf = (
+                payroll_data[
+                    "pf"
+                ]
+            )
+
+            existing_payroll.professional_tax = (
+                payroll_data[
+                    "professional_tax"
+                ]
+            )
+
+            existing_payroll.total_deductions = (
+                payroll_data[
+                    "total_deductions"
+                ]
+            )
+
+            existing_payroll.net_salary = (
+                payroll_data[
+                    "net_salary"
+                ]
+            )
+
+            db.commit()
+
+            db.refresh(
+                existing_payroll
+            )
+
+            return existing_payroll
+
+        # =================================================
+        # CREATE NEW PAYROLL
+        # =================================================
+
+        payroll = Payroll(
+
+            employee_id=employee_id,
+
+            employee_name=(
+                payroll_data[
+                    "employee_name"
+                ]
+            ),
+
+            employee_code=(
+                payroll_data[
+                    "employee_id"
+                ]
+            ),
+
+            month=month,
+
+            year=year,
+
+            total_working_days=(
+                payroll_data[
+                    "total_working_days"
+                ]
+            ),
+
+            present_days=(
+                payroll_data[
+                    "present_days"
+                ]
+            ),
+
+            half_days=(
+                payroll_data[
+                    "half_days"
+                ]
+            ),
+
+            absent_days=(
+                payroll_data[
+                    "absent_days"
+                ]
+            ),
+
+            leave_days=(
+                payroll_data[
+                    "leave_days"
+                ]
+            ),
+
+            paid_days=(
+                payroll_data[
+                    "paid_days"
+                ]
+            ),
+
+            basic_salary=(
+                payroll_data[
+                    "basic_salary"
+                ]
+            ),
+
+            hra=(
+                payroll_data[
+                    "hra"
+                ]
+            ),
+
+            allowance=(
+                payroll_data[
+                    "allowance"
+                ]
+            ),
+
+            gross_salary=(
+                payroll_data[
+                    "gross_salary"
+                ]
+            ),
+
+            daily_salary=(
+                payroll_data[
+                    "daily_salary"
+                ]
+            ),
+
+            earned_salary=(
+                payroll_data[
+                    "earned_salary"
+                ]
+            ),
+
+            pf=(
+                payroll_data[
+                    "pf"
+                ]
+            ),
+
+            professional_tax=(
+                payroll_data[
+                    "professional_tax"
+                ]
+            ),
+
+            total_deductions=(
+                payroll_data[
+                    "total_deductions"
+                ]
+            ),
+
+            net_salary=(
+                payroll_data[
+                    "net_salary"
+                ]
+            ),
+        )
+
+        return (
+            PayrollRepository
+            .create_payroll(
+                db,
+                payroll,
+            )
+        )
+
+
+    # =====================================================
+    # GET ALL PAYROLL HISTORY
+    # =====================================================
+
+    @staticmethod
+    def get_all_payroll(
+        db: Session,
+    ):
+
+        return (
+            PayrollRepository
+            .get_all_payroll(
+                db
+            )
+        )
+
+
+    # =====================================================
+    # GET PAYROLL BY ID
+    # =====================================================
+
+    @staticmethod
+    def get_payroll_by_id(
+        db: Session,
+        payroll_id: int,
+    ):
+
+        return (
+            PayrollRepository
+            .get_payroll_by_id(
+                db,
+                payroll_id,
+            )
+        )
+
+
+    # =====================================================
+    # GET EMPLOYEE PAYROLL HISTORY
+    # =====================================================
+
+    @staticmethod
+    def get_employee_payroll(
+        db: Session,
+        employee_id: int,
+    ):
+
+        return (
+            PayrollRepository
+            .get_employee_payroll(
+                db,
+                employee_id,
+            )
+        )
+
+
+    # =====================================================
+    # DELETE PAYROLL
+    # =====================================================
+
+    @staticmethod
+    def delete_payroll(
+        db: Session,
+        payroll_id: int,
+    ):
+
+        return (
+            PayrollRepository
+            .delete_payroll(
+                db,
+                payroll_id,
+            )
+        )

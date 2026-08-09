@@ -43,6 +43,9 @@ from app.api.equipment_assignment import (
 from app.api.project_summary import (
     router as project_summary_router,
 )
+from app.api.payroll_history import (
+    router as payroll_history_router,
+)
 # Custom Exceptions
 from app.core.exceptions import (
     NotFoundException,
@@ -125,6 +128,7 @@ app.include_router(budget_dashboard_router)
 app.include_router(report_router)
 app.include_router(salary_structure_router)
 app.include_router(payroll_router)
+app.include_router(payroll_history_router)
 
 app.add_exception_handler(
     HTTPException,
