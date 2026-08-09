@@ -15,7 +15,7 @@ import AttendancePage from "../pages/Attendance/AttendancePage";
 import Login from "../pages/Login/Login";
 
 import ProtectedRoute from "./ProtectedRoute";
-
+import PayrollPage from "../pages/Payroll/PayrollPage";
 
 function AppRoutes() {
 
@@ -82,7 +82,7 @@ function AppRoutes() {
                         path="attendance"
                         element={<AttendancePage />}
                     />
-
+                 
 
                     {/* Materials */}
 
@@ -90,7 +90,11 @@ function AppRoutes() {
                         path="materials"
                         element={<MaterialPage />}
                     />
-
+                    
+                    <Route
+                        path="payroll"
+                        element={<PayrollPage />}
+                    />
                 </Route>
 
             </Routes>
