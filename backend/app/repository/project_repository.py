@@ -9,31 +9,40 @@ from app.schemas.project import (
 
 class ProjectRepository:
 
+    # ==========================================================
+    # CREATE PROJECT
+    # ==========================================================
+
     @staticmethod
     def create_project(
         db: Session,
         project: ProjectCreate,
     ):
 
-        # Find the latest project
+        # Find latest project
         last_project = (
             db.query(Project)
             .order_by(Project.id.desc())
             .first()
         )
 
-        # Generate project ID
-        if last_project and last_project.project_id:
+        # Generate Project ID
+        if (
+            last_project
+            and last_project.project_id
+        ):
 
             try:
+
                 last_number = int(
                     last_project.project_id.replace(
                         "PRJ",
-                        ""
+                        "",
                     )
                 )
 
             except ValueError:
+
                 last_number = last_project.id
 
             new_project_id = (
@@ -41,12 +50,13 @@ class ProjectRepository:
             )
 
         else:
+
             new_project_id = "PRJ001"
 
         # Convert Pydantic model to dictionary
         project_data = project.model_dump()
 
-        # Add generated project ID
+        # Add generated Project ID
         project_data["project_id"] = new_project_id
 
         # Create SQLAlchemy object
@@ -62,6 +72,10 @@ class ProjectRepository:
 
         return db_project
 
+    # ==========================================================
+    # GET ALL PROJECTS
+    # ==========================================================
+
     @staticmethod
     def get_all_projects(
         db: Session,
@@ -72,6 +86,10 @@ class ProjectRepository:
             .order_by(Project.id.desc())
             .all()
         )
+
+    # ==========================================================
+    # GET PROJECT BY ID
+    # ==========================================================
 
     @staticmethod
     def get_project_by_id(
@@ -86,6 +104,10 @@ class ProjectRepository:
             )
             .first()
         )
+
+    # ==========================================================
+    # UPDATE PROJECT
+    # ==========================================================
 
     @staticmethod
     def update_project(
@@ -102,7 +124,7 @@ class ProjectRepository:
             .first()
         )
 
-        if not db_project:
+        if db_project is None:
             return None
 
         update_data = project.model_dump(
@@ -123,6 +145,10 @@ class ProjectRepository:
 
         return db_project
 
+    # ==========================================================
+    # DELETE PROJECT
+    # ==========================================================
+
     @staticmethod
     def delete_project(
         db: Session,
@@ -137,7 +163,7 @@ class ProjectRepository:
             .first()
         )
 
-        if not db_project:
+        if db_project is None:
             return None
 
         db.delete(db_project)

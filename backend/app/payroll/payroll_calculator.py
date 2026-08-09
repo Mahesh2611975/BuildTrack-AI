@@ -10,27 +10,13 @@ class PayrollCalculator:
         total_working_days,
     ):
 
-        # =================================================
+        # ==========================================
         # SALARY COMPONENTS
-        # =================================================
+        # ==========================================
 
-        basic = salary_structure.basic_salary
-
-        hra = (
-            salary_structure.hra
-            if salary_structure.hra is not None
-            else 0
-        )
-
-        allowance = (
-            salary_structure.allowance
-            if salary_structure.allowance is not None
-            else 0
-        )
-
-        # =================================================
-        # GROSS SALARY
-        # =================================================
+        basic = salary_structure.basic_salary or 0
+        hra = salary_structure.hra or 0
+        allowance = salary_structure.allowance or 0
 
         gross_salary = (
             basic
@@ -38,14 +24,27 @@ class PayrollCalculator:
             + allowance
         )
 
-        # =================================================
+        # ==========================================
+        # DAILY SALARY
+        # ==========================================
+
+        if total_working_days <= 0:
+            daily_salary = 0
+        else:
+            daily_salary = (
+                gross_salary
+                / total_working_days
+            )
+
+        # ==========================================
         # PAID DAYS
+        # ==========================================
         #
-        # Present  = 1 day
+        # Present = 1 day
         # Half Day = 0.5 day
-        # Leave    = 1 day
-        # Absent   = 0 day
-        # =================================================
+        # Leave = 1 paid day
+        # Absent = 0 day
+        #
 
         paid_days = (
             present_days
@@ -53,59 +52,96 @@ class PayrollCalculator:
             + leave_days
         )
 
-        # =================================================
-        # DAILY SALARY
-        # =================================================
+        # Prevent invalid paid days
 
-        daily_salary = (
-            gross_salary
-            / total_working_days
+        paid_days = max(
+            0,
+            min(
+                paid_days,
+                total_working_days,
+            ),
         )
 
-        # =================================================
+        # ==========================================
         # EARNED SALARY
-        # =================================================
+        # ==========================================
 
         earned_salary = (
             daily_salary
             * paid_days
         )
 
-        # =================================================
-        # DEDUCTIONS
-        # =================================================
+        # ==========================================
+        # MONTHLY DEDUCTIONS
+        # ==========================================
 
-        pf = (
-            salary_structure.pf
-            if salary_structure.pf is not None
-            else 0
+        monthly_pf = (
+            salary_structure.pf or 0
         )
 
-        professional_tax = (
-            salary_structure.professional_tax
-            if salary_structure.professional_tax is not None
-            else 0
+        monthly_professional_tax = (
+            salary_structure.professional_tax or 0
         )
+
+        # ==========================================
+        # PRORATED DEDUCTIONS
+        # ==========================================
+        #
+        # Example:
+        #
+        # Monthly PF = ₹1800
+        # Working days = 31
+        # Paid days = 1
+        #
+        # PF = 1800 / 31 * 1
+        #
+
+        if total_working_days > 0:
+
+            pf = (
+                monthly_pf
+                / total_working_days
+                * paid_days
+            )
+
+            professional_tax = (
+                monthly_professional_tax
+                / total_working_days
+                * paid_days
+            )
+
+        else:
+
+            pf = 0
+            professional_tax = 0
+
+        # ==========================================
+        # TOTAL DEDUCTIONS
+        # ==========================================
 
         total_deductions = (
             pf
             + professional_tax
         )
 
-        # =================================================
+        # ==========================================
         # NET SALARY
-        # =================================================
+        # ==========================================
 
         net_salary = (
             earned_salary
             - total_deductions
         )
 
-        # =================================================
-        # RESULT
-        # =================================================
+        # ==========================================
+        # RESPONSE
+        # ==========================================
 
         return {
+
+            # ======================================
+            # SALARY
+            # ======================================
 
             "basic_salary": round(
                 basic,
@@ -127,25 +163,30 @@ class PayrollCalculator:
                 2,
             ),
 
-            "total_working_days":
-                total_working_days,
+            # ======================================
+            # ATTENDANCE
+            # ======================================
 
-            "present_days":
-                present_days,
+            "total_working_days": (
+                total_working_days
+            ),
 
-            "half_days":
-                half_days,
+            "present_days": present_days,
 
-            "absent_days":
-                absent_days,
+            "half_days": half_days,
 
-            "leave_days":
-                leave_days,
+            "absent_days": absent_days,
+
+            "leave_days": leave_days,
 
             "paid_days": round(
                 paid_days,
                 2,
             ),
+
+            # ======================================
+            # SALARY CALCULATION
+            # ======================================
 
             "daily_salary": round(
                 daily_salary,
@@ -156,6 +197,10 @@ class PayrollCalculator:
                 earned_salary,
                 2,
             ),
+
+            # ======================================
+            # DEDUCTIONS
+            # ======================================
 
             "pf": round(
                 pf,
@@ -171,6 +216,10 @@ class PayrollCalculator:
                 total_deductions,
                 2,
             ),
+
+            # ======================================
+            # FINAL SALARY
+            # ======================================
 
             "net_salary": round(
                 net_salary,

@@ -9,6 +9,10 @@ from app.schemas.project import (
 
 class ProjectService:
 
+    # ==========================================================
+    # CREATE PROJECT
+    # ==========================================================
+
     @staticmethod
     def create_project(
         db: Session,
@@ -19,6 +23,10 @@ class ProjectService:
             project,
         )
 
+    # ==========================================================
+    # GET ALL PROJECTS
+    # ==========================================================
+
     @staticmethod
     def get_all_projects(
         db: Session,
@@ -26,6 +34,10 @@ class ProjectService:
         return ProjectRepository.get_all_projects(
             db
         )
+
+    # ==========================================================
+    # GET PROJECT BY ID
+    # ==========================================================
 
     @staticmethod
     def get_project_by_id(
@@ -36,6 +48,10 @@ class ProjectService:
             db,
             project_id,
         )
+
+    # ==========================================================
+    # UPDATE PROJECT
+    # ==========================================================
 
     @staticmethod
     def update_project(
@@ -48,6 +64,10 @@ class ProjectService:
             project_id,
             project,
         )
+
+    # ==========================================================
+    # DELETE PROJECT
+    # ==========================================================
 
     @staticmethod
     def delete_project(

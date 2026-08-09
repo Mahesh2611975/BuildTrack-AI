@@ -29,16 +29,27 @@ class PayrollService:
         month: int,
     ):
 
-        # =================================================
+        # ==========================================
         # VALIDATE MONTH
-        # =================================================
+        # ==========================================
 
         if month < 1 or month > 12:
-            return "invalid_month"
+            raise ValueError(
+                "Month must be between 1 and 12"
+            )
 
-        # =================================================
-        # GET EMPLOYEE
-        # =================================================
+        # ==========================================
+        # VALIDATE YEAR
+        # ==========================================
+
+        if year < 2000 or year > 2100:
+            raise ValueError(
+                "Year must be between 2000 and 2100"
+            )
+
+        # ==========================================
+        # FIND EMPLOYEE
+        # ==========================================
 
         employee = (
             EmployeeRepository.get_employee_by_id(
@@ -50,9 +61,9 @@ class PayrollService:
         if employee is None:
             return None
 
-        # =================================================
-        # GET SALARY STRUCTURE
-        # =================================================
+        # ==========================================
+        # FIND SALARY STRUCTURE
+        # ==========================================
 
         salary = (
             SalaryStructureRepository
@@ -65,9 +76,9 @@ class PayrollService:
         if salary is None:
             return "salary_not_found"
 
-        # =================================================
-        # GET ATTENDANCE SUMMARY
-        # =================================================
+        # ==========================================
+        # GET MONTHLY ATTENDANCE
+        # ==========================================
 
         attendance = (
             AttendanceRepository
@@ -79,67 +90,46 @@ class PayrollService:
             )
         )
 
-        present_days = attendance[
-            "present_days"
-        ]
+        present_days = attendance["present_days"]
 
-        half_days = attendance[
-            "half_days"
-        ]
+        half_days = attendance["half_days"]
 
-        absent_days = attendance[
-            "absent_days"
-        ]
+        absent_days = attendance["absent_days"]
 
-        leave_days = attendance[
-            "leave_days"
-        ]
+        leave_days = attendance["leave_days"]
 
-        # =================================================
+        # ==========================================
         # TOTAL DAYS IN MONTH
-        # =================================================
+        # ==========================================
 
         total_working_days = monthrange(
             year,
             month,
         )[1]
 
-        # =================================================
+        # ==========================================
         # CALCULATE PAYROLL
-        # =================================================
+        # ==========================================
 
         payroll = PayrollCalculator.calculate(
             salary_structure=salary,
-
             present_days=present_days,
-
             half_days=half_days,
-
             absent_days=absent_days,
-
             leave_days=leave_days,
-
             total_working_days=total_working_days,
         )
 
-        # =================================================
+        # ==========================================
         # EMPLOYEE INFORMATION
-        # =================================================
+        # ==========================================
 
-        payroll["employee_name"] = (
-            employee.full_name
-        )
+        payroll["employee_name"] = employee.full_name
 
-        payroll["employee_id"] = (
-            employee.employee_id
-        )
+        payroll["employee_id"] = employee.employee_id
 
         payroll["month"] = month
 
         payroll["year"] = year
-
-        # =================================================
-        # RETURN
-        # =================================================
 
         return payroll
