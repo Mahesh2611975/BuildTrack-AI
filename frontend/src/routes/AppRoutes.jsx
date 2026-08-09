@@ -16,6 +16,7 @@ import Login from "../pages/Login/Login";
 
 import ProtectedRoute from "./ProtectedRoute";
 import PayrollPage from "../pages/Payroll/PayrollPage";
+import ReportsPage from "../pages/Reports/ReportsPage";
 
 function AppRoutes() {
 
@@ -94,6 +95,10 @@ function AppRoutes() {
                     <Route
                         path="payroll"
                         element={<PayrollPage />}
+                    />
+                    <Route
+                        path="reports"
+                        element={<ReportsPage />}
                     />
                 </Route>
 
