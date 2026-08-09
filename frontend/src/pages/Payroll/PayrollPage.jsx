@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 
 import CalculateIcon from "@mui/icons-material/Calculate";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import api from "../../services/api";
 import { getPayroll } from "../../services/payrollService";
@@ -36,6 +37,8 @@ function PayrollPage() {
     const [payroll, setPayroll] = useState(null);
 
     const [loading, setLoading] = useState(false);
+
+    const [downloading, setDownloading] = useState(false);
 
 
     // =====================================================
@@ -81,7 +84,11 @@ function PayrollPage() {
     const handleGeneratePayroll = async () => {
 
         if (!employeeId) {
-            alert("Please select an employee");
+
+            alert(
+                "Please select an employee"
+            );
+
             return;
         }
 
@@ -95,7 +102,9 @@ function PayrollPage() {
                 month
             );
 
-            setPayroll(response.data);
+            setPayroll(
+                response.data
+            );
 
         } catch (error) {
 
@@ -118,6 +127,90 @@ function PayrollPage() {
         }
     };
 
+
+    // =====================================================
+    // DOWNLOAD PAYSLIP
+    // =====================================================
+
+    const handleDownloadPayslip = async () => {
+
+        if (!employeeId) {
+
+            alert(
+                "Please select an employee"
+            );
+
+            return;
+        }
+
+        if (!payroll) {
+
+            alert(
+                "Please generate payroll first"
+            );
+
+            return;
+        }
+
+        try {
+
+            setDownloading(true);
+
+            const response = await api.get(
+                `/payroll/${employeeId}/${year}/${month}/payslip`,
+                {
+                    responseType: "blob",
+                }
+            );
+
+            const blob = new Blob(
+                [response.data],
+                {
+                    type: "application/pdf",
+                }
+            );
+
+            const url =
+                window.URL.createObjectURL(blob);
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+
+            link.download =
+                `payslip_${payroll.employee_id}_${year}_${month}.pdf`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+
+            console.error(
+                "Failed to download payslip:",
+                error
+            );
+
+            alert(
+                "Failed to download payslip"
+            );
+
+        } finally {
+
+            setDownloading(false);
+
+        }
+    };
+
+
+    // =====================================================
+    // PAGE
+    // =====================================================
 
     return (
 
@@ -178,7 +271,9 @@ function PayrollPage() {
                         spacing={2}
                     >
 
-                        {/* Employee */}
+                        {/* ================================================= */}
+                        {/* EMPLOYEE */}
+                        {/* ================================================= */}
 
                         <Grid
                             item
@@ -197,11 +292,14 @@ function PayrollPage() {
                                 <Select
                                     value={employeeId}
                                     label="Employee"
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+
                                         setEmployeeId(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        setPayroll(null);
+                                    }}
                                 >
 
                                     {employees.map(
@@ -215,13 +313,17 @@ function PayrollPage() {
                                                     employee.id
                                                 }
                                             >
+
                                                 {
                                                     employee.employee_id
-                                                }{" "}
-                                                -{" "}
+                                                }
+
+                                                {" - "}
+
                                                 {
                                                     employee.full_name
                                                 }
+
                                             </MenuItem>
 
                                         )
@@ -234,7 +336,9 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* Year */}
+                        {/* ================================================= */}
+                        {/* YEAR */}
+                        {/* ================================================= */}
 
                         <Grid
                             item
@@ -253,11 +357,14 @@ function PayrollPage() {
                                 <Select
                                     value={year}
                                     label="Year"
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+
                                         setYear(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        setPayroll(null);
+                                    }}
                                 >
 
                                     <MenuItem value={2026}>
@@ -279,7 +386,9 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* Month */}
+                        {/* ================================================= */}
+                        {/* MONTH */}
+                        {/* ================================================= */}
 
                         <Grid
                             item
@@ -298,11 +407,14 @@ function PayrollPage() {
                                 <Select
                                     value={month}
                                     label="Month"
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+
                                         setMonth(
                                             e.target.value
-                                        )
-                                    }
+                                        );
+
+                                        setPayroll(null);
+                                    }}
                                 >
 
                                     <MenuItem value={1}>
@@ -360,7 +472,9 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* Generate Button */}
+                        {/* ================================================= */}
+                        {/* GENERATE BUTTON */}
+                        {/* ================================================= */}
 
                         <Grid
                             item
@@ -407,7 +521,9 @@ function PayrollPage() {
 
                 <>
 
-                    {/* Employee Information */}
+                    {/* ================================================= */}
+                    {/* EMPLOYEE INFORMATION */}
+                    {/* ================================================= */}
 
                     <Card sx={{ mb: 3 }}>
 
@@ -417,22 +533,31 @@ function PayrollPage() {
                                 variant="h5"
                                 fontWeight="600"
                             >
-                                {payroll.employee_name}
+                                {
+                                    payroll.employee_name
+                                }
                             </Typography>
 
                             <Typography
                                 color="text.secondary"
                             >
                                 Employee ID:{" "}
-                                {payroll.employee_id}
+                                {
+                                    payroll.employee_id
+                                }
                             </Typography>
 
                             <Typography
                                 color="text.secondary"
                             >
                                 Payroll Period:{" "}
-                                {payroll.month}/
-                                {payroll.year}
+                                {
+                                    payroll.month
+                                }
+                                /
+                                {
+                                    payroll.year
+                                }
                             </Typography>
 
                         </CardContent>
@@ -617,7 +742,9 @@ function PayrollPage() {
 
                                     <Typography>
                                         PF: ₹
-                                        {payroll.pf}
+                                        {
+                                            payroll.pf
+                                        }
                                     </Typography>
 
                                     <Typography>
@@ -669,12 +796,37 @@ function PayrollPage() {
                                     <Typography
                                         variant="h4"
                                         fontWeight="700"
+                                        sx={{ mb: 2 }}
                                     >
                                         ₹
                                         {
                                             payroll.net_salary
                                         }
                                     </Typography>
+
+
+                                    {/* DOWNLOAD PAYSLIP */}
+
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        fullWidth
+                                        startIcon={
+                                            <DownloadIcon />
+                                        }
+                                        onClick={
+                                            handleDownloadPayslip
+                                        }
+                                        disabled={
+                                            downloading
+                                        }
+                                    >
+
+                                        {downloading
+                                            ? "Downloading..."
+                                            : "Download Payslip"}
+
+                                    </Button>
 
                                 </CardContent>
 
