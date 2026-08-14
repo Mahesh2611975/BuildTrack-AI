@@ -17,6 +17,7 @@ import Login from "../pages/Login/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import PayrollPage from "../pages/Payroll/PayrollPage";
 import ReportsPage from "../pages/Reports/ReportsPage";
+import EquipmentPage from "../pages/Equipment/EquipmentPage";
 
 function AppRoutes() {
 
@@ -91,7 +92,10 @@ function AppRoutes() {
                         path="materials"
                         element={<MaterialPage />}
                     />
-                    
+                    <Route
+                        path="equipment"
+                        element={<EquipmentPage />}
+                    />
                     <Route
                         path="payroll"
                         element={<PayrollPage />}
