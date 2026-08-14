@@ -45,6 +45,32 @@ def get_all_equipment(
 ):
     return EquipmentService.get_all_equipment(db)
 
+# ==========================================================
+# GET EQUIPMENT BY ID
+# ==========================================================
+
+@router.get(
+    "/{equipment_id}",
+    response_model=EquipmentResponse,
+)
+def get_equipment(
+    equipment_id: int,
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),
+):
+
+    equipment = EquipmentService.get_equipment_by_id(
+        db,
+        equipment_id,
+    )
+
+    if equipment is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Equipment not found",
+        )
+
+    return equipment
 
 @router.put(
     "/{equipment_id}",

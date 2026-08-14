@@ -66,40 +66,33 @@ def employee_report(
 # PROJECT REPORT
 # ==========================================================
 
-@router.get("/project/{project_id}")
+@router.get("/project/{project_code}")
 def project_report(
-    project_id: int,
+    project_code: str,
     db: Session = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
 
-    project = (
-        ProjectRepository.get_project_by_id(
-            db,
-            project_id,
-        )
+    project = ProjectRepository.get_project_by_code(
+        db,
+        project_code,
     )
 
     if project is None:
-
         raise HTTPException(
             status_code=404,
             detail="Project not found",
         )
 
-    pdf = generate_project_report(
-        project
-    )
+    pdf = generate_project_report(project)
 
     return StreamingResponse(
         pdf,
         media_type="application/pdf",
         headers={
-            "Content-Disposition":
-            (
+            "Content-Disposition": (
                 "attachment; "
-                f"filename=Project_"
-                f"{project.project_id}.pdf"
+                f"filename=Project_{project.project_id}.pdf"
             )
         },
     )

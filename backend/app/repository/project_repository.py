@@ -104,7 +104,23 @@ class ProjectRepository:
             )
             .first()
         )
+        # ==========================================================
+    # GET PROJECT BY PROJECT CODE
+    # ==========================================================
 
+    @staticmethod
+    def get_project_by_code(
+        db: Session,
+        project_code: str,
+    ):
+
+        return (
+            db.query(Project)
+            .filter(
+                Project.project_id == project_code
+            )
+            .first()
+        )
     # ==========================================================
     # UPDATE PROJECT
     # ==========================================================

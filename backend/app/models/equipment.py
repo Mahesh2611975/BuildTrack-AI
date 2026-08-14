@@ -41,6 +41,20 @@ class Equipment(Base):
         nullable=True,
     )
 
+    # ==========================================
+    # OWNERSHIP
+    # ==========================================
+
+    ownership_type = Column(
+        String(20),
+        nullable=False,
+        default="Owned",
+    )
+
+    # ==========================================
+    # PURCHASE DETAILS
+    # ==========================================
+
     purchase_date = Column(
         Date,
         nullable=True,
@@ -50,6 +64,24 @@ class Equipment(Base):
         Float,
         nullable=True,
     )
+
+    # ==========================================
+    # RENTAL DETAILS
+    # ==========================================
+
+    rental_rate = Column(
+        Float,
+        nullable=True,
+    )
+
+    rental_rate_unit = Column(
+        String(20),
+        nullable=True,
+    )
+
+    # ==========================================
+    # STATUS
+    # ==========================================
 
     status = Column(
         String(30),

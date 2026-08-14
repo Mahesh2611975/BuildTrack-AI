@@ -6,6 +6,10 @@ from app.models.attendance import Attendance
 
 class AttendanceRepository:
 
+    # =====================================================
+    # MARK ATTENDANCE
+    # =====================================================
+
     @staticmethod
     def mark_attendance(
         db: Session,
@@ -16,6 +20,10 @@ class AttendanceRepository:
         db.refresh(attendance)
 
         return attendance
+
+    # =====================================================
+    # GET ALL ATTENDANCE
+    # =====================================================
 
     @staticmethod
     def get_all_attendance(
@@ -29,6 +37,10 @@ class AttendanceRepository:
             )
             .all()
         )
+
+    # =====================================================
+    # GET EMPLOYEE ATTENDANCE
+    # =====================================================
 
     @staticmethod
     def get_employee_attendance(
@@ -45,6 +57,29 @@ class AttendanceRepository:
             )
             .all()
         )
+
+    # =====================================================
+    # GET ATTENDANCE BY EMPLOYEE AND DATE
+    # =====================================================
+
+    @staticmethod
+    def get_attendance_by_employee_and_date(
+        db: Session,
+        employee_id: int,
+        date,
+    ):
+        return (
+            db.query(Attendance)
+            .filter(
+                Attendance.employee_id == employee_id,
+                Attendance.date == date,
+            )
+            .first()
+        )
+
+    # =====================================================
+    # COUNT PRESENT DAYS
+    # =====================================================
 
     @staticmethod
     def count_present_days(
