@@ -16,7 +16,7 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import DescriptionIcon from "@mui/icons-material/Description";
-
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
@@ -46,6 +46,11 @@ const menuItems = [
         text: "Materials",
         icon: <InventoryIcon />,
         path: "/materials",
+    },
+    {
+    text: "Expenses",
+    icon: <ReceiptLongIcon />,
+    path: "/expenses",
     },
     {
         text: "Equipment",

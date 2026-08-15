@@ -20,7 +20,7 @@ import ReportsPage from "../pages/Reports/ReportsPage";
 import EquipmentPage from "../pages/Equipment/EquipmentPage";
 import EquipmentAssignmentPage
     from "../pages/Equipment/EquipmentAssignmentPage";
-
+import ExpensesPage from "../pages/Expenses/ExpensesPage";
 
 function AppRoutes() {
 
@@ -94,6 +94,10 @@ function AppRoutes() {
                     <Route
                         path="materials"
                         element={<MaterialPage />}
+                    />
+                    <Route
+                        path="expenses"
+                        element={<ExpensesPage />}
                     />
                     <Route
                         path="equipment"
