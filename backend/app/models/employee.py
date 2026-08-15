@@ -88,3 +88,8 @@ class Employee(Base):
         back_populates="employee",
         cascade="all, delete-orphan",
     )
+    advances = relationship(
+        "Advance",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+    )
