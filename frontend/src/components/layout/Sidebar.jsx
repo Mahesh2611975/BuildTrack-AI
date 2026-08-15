@@ -13,6 +13,7 @@ import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import BusinessIcon from "@mui/icons-material/Business";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import EngineeringIcon from "@mui/icons-material/Engineering";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import DescriptionIcon from "@mui/icons-material/Description";
 
@@ -50,6 +51,11 @@ const menuItems = [
         text: "Equipment",
         icon: <EngineeringIcon />,
         path: "/equipment",
+    },
+    {
+    text: "Equipment Assignments",
+    icon: <AssignmentIcon />,
+    path: "/equipment-assignments",
     },
     {
         text: "Payroll",

@@ -1,30 +1,38 @@
 export const equipmentColumns = [
+
     {
         field: "equipmentCode",
         headerName: "Equipment ID",
     },
+
     {
         field: "equipmentName",
         headerName: "Equipment Name",
     },
+
     {
         field: "category",
         headerName: "Category",
     },
+
     {
-        field: "manufacturer",
-        headerName: "Manufacturer",
+        field: "ownership",
+        headerName: "Ownership",
     },
+
     {
-        field: "purchaseCost",
-        headerName: "Purchase Cost",
+        field: "rate",
+        headerName: "Rate / Cost",
     },
+
     {
         field: "status",
         headerName: "Status",
     },
+
     {
         field: "actions",
         headerName: "Actions",
     },
+
 ];

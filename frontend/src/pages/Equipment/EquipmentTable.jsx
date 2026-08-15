@@ -4,6 +4,7 @@ import StatusChip from "../../components/common/StatusChip";
 import { equipmentColumns } from "./EquipmentColumns";
 import EquipmentActions from "./EquipmentActions";
 
+
 function EquipmentTable({
     rows = [],
     loading,
@@ -12,43 +13,65 @@ function EquipmentTable({
 }) {
 
     const formattedRows = rows.map(
-        (row) => ({
+        (row) => {
 
-            id: row.id,
+            let rate = "-";
 
-            equipmentCode:
-                row.equipment_code,
+            if (
+                row.ownership_type === "Rented" &&
+                row.rental_rate != null
+            ) {
+                rate = `₹${Number(
+                    row.rental_rate
+                ).toLocaleString("en-IN")} / ${
+                    row.rental_rate_unit === "Hour"
+                        ? "Hour"
+                        : "Day"
+                }`;
+            }
 
-            equipmentName:
-                row.equipment_name,
-
-            category:
-                row.category,
-
-            manufacturer:
-                row.manufacturer || "-",
-
-            purchaseCost:
+            if (
+                row.ownership_type === "Owned" &&
                 row.purchase_cost != null
-                    ? `₹${row.purchase_cost}`
-                    : "-",
+            ) {
+                rate = `₹${Number(
+                    row.purchase_cost
+                ).toLocaleString("en-IN")}`;
+            }
 
-            status: (
-                <StatusChip
-                    status={
-                        row.status
-                    }
-                />
-            ),
+            return {
 
-            actions: (
-                <EquipmentActions
-                    row={row}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                />
-            ),
-        })
+                id: row.id,
+
+                equipmentCode:
+                    row.equipment_code,
+
+                equipmentName:
+                    row.equipment_name,
+
+                category:
+                    row.category,
+
+                ownership:
+                    row.ownership_type || "-",
+
+                rate,
+
+                status: (
+                    <StatusChip
+                        status={row.status}
+                    />
+                ),
+
+                actions: (
+                    <EquipmentActions
+                        row={row}
+                        onEdit={onEdit}
+                        onDelete={onDelete}
+                    />
+                ),
+            };
+        }
     );
 
     return (
@@ -59,5 +82,6 @@ function EquipmentTable({
         />
     );
 }
+
 
 export default EquipmentTable;
