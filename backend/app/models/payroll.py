@@ -128,7 +128,11 @@ class Payroll(Base):
         default=0,
         nullable=False,
     )
-
+    advance_deduction = Column(
+        Float,
+        default=0,
+        nullable=False,
+    )
     total_deductions = Column(
         Float,
         default=0,

@@ -53,7 +53,7 @@ class PayrollResponse(BaseModel):
 
     pf: float
     professional_tax: float
-
+    advance_deduction: float
     total_deductions: float
 
     # ==========================================

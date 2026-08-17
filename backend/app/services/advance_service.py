@@ -24,14 +24,80 @@ class AdvanceService:
         request: AdvanceCreate,
     ):
 
-        advance = Advance(
-            advance_code=request.advance_code,
-            employee_id=request.employee_id,
-            amount=request.amount,
-            advance_date=request.advance_date,
-            reason=request.reason,
-            status="Pending",
+        # ------------------------------------------------------
+        # Find the latest advance
+        # ------------------------------------------------------
+
+        latest_advance = (
+            db.query(Advance)
+            .order_by(
+                Advance.id.desc()
+            )
+            .first()
         )
+
+        # ------------------------------------------------------
+        # Generate next advance number
+        # ------------------------------------------------------
+
+        if latest_advance:
+
+            try:
+
+                last_number = int(
+                    latest_advance.advance_code
+                    .replace("ADV", "")
+                )
+
+                next_number = (
+                    last_number + 1
+                )
+
+            except (
+                ValueError,
+                AttributeError,
+            ):
+
+                next_number = (
+                    latest_advance.id + 1
+                )
+
+        else:
+
+            next_number = 1
+
+        # ------------------------------------------------------
+        # Generate advance code
+        # Example: ADV001, ADV002, ADV003
+        # ------------------------------------------------------
+
+        advance_code = (
+            f"ADV{next_number:03d}"
+        )
+
+        # ------------------------------------------------------
+        # Create Advance
+        # ------------------------------------------------------
+
+        advance = Advance(
+
+            advance_code=advance_code,
+
+            employee_id=request.employee_id,
+
+            amount=request.amount,
+            remaining_amount=request.amount,
+            advance_date=request.advance_date,
+
+            reason=request.reason,
+
+            status="Pending",
+
+        )
+
+        # ------------------------------------------------------
+        # Save to database
+        # ------------------------------------------------------
 
         return AdvanceRepository.create_advance(
             db,
@@ -96,23 +162,39 @@ class AdvanceService:
         request: AdvanceUpdate,
     ):
 
-        advance = AdvanceRepository.get_advance_by_id(
-            db,
-            advance_id,
+        advance = (
+            AdvanceRepository.get_advance_by_id(
+                db,
+                advance_id,
+            )
         )
 
         if advance is None:
             return None
 
-        advance.amount = request.amount
+        # ------------------------------------------------------
+        # Update editable fields
+        # ------------------------------------------------------
+
+        advance.amount = (
+            request.amount
+        )
 
         advance.advance_date = (
             request.advance_date
         )
 
-        advance.reason = request.reason
+        advance.reason = (
+            request.reason
+        )
 
-        advance.status = request.status
+        advance.status = (
+            request.status
+        )
+
+        # ------------------------------------------------------
+        # Save changes
+        # ------------------------------------------------------
 
         return AdvanceRepository.update_advance(
             db,
@@ -130,13 +212,19 @@ class AdvanceService:
         advance_id: int,
     ):
 
-        advance = AdvanceRepository.get_advance_by_id(
-            db,
-            advance_id,
+        advance = (
+            AdvanceRepository.get_advance_by_id(
+                db,
+                advance_id,
+            )
         )
 
         if advance is None:
             return None
+
+        # ------------------------------------------------------
+        # Delete advance
+        # ------------------------------------------------------
 
         AdvanceRepository.delete_advance(
             db,

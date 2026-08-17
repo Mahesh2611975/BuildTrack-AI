@@ -1,15 +1,12 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 
 class AdvanceCreate(BaseModel):
-
-    advance_code: str = Field(
-        ...,
-        min_length=2,
-        max_length=20,
-    )
 
     employee_id: int
 
@@ -46,6 +43,8 @@ class AdvanceResponse(BaseModel):
     employee_id: int
 
     amount: float
+
+    remaining_amount: float
 
     advance_date: date
 

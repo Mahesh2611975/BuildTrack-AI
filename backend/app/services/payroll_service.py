@@ -1,6 +1,11 @@
 from calendar import monthrange
+from datetime import date
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from app.models.advance import Advance
+from app.models.payroll import Payroll
 
 from app.repository.employee_repository import (
     EmployeeRepository,
@@ -17,8 +22,6 @@ from app.repository.attendance_repository import (
 from app.repository.payroll_repository import (
     PayrollRepository,
 )
-
-from app.models.payroll import Payroll
 
 from app.payroll.payroll_calculator import (
     PayrollCalculator,
@@ -44,7 +47,6 @@ class PayrollService:
         # =================================================
 
         if month < 1 or month > 12:
-
             raise ValueError(
                 "Month must be between 1 and 12"
             )
@@ -54,7 +56,6 @@ class PayrollService:
         # =================================================
 
         if year < 2000 or year > 2100:
-
             raise ValueError(
                 "Year must be between 2000 and 2100"
             )
@@ -102,21 +103,13 @@ class PayrollService:
             )
         )
 
-        present_days = attendance[
-            "present_days"
-        ]
+        present_days = attendance["present_days"]
 
-        half_days = attendance[
-            "half_days"
-        ]
+        half_days = attendance["half_days"]
 
-        absent_days = attendance[
-            "absent_days"
-        ]
+        absent_days = attendance["absent_days"]
 
-        leave_days = attendance[
-            "leave_days"
-        ]
+        leave_days = attendance["leave_days"]
 
         # =================================================
         # TOTAL DAYS IN MONTH
@@ -128,7 +121,7 @@ class PayrollService:
         )[1]
 
         # =================================================
-        # CALCULATE PAYROLL
+        # CALCULATE BASIC PAYROLL
         # =================================================
 
         payroll = PayrollCalculator.calculate(
@@ -141,6 +134,113 @@ class PayrollService:
         )
 
         # =================================================
+        # NORMAL DEDUCTIONS
+        # =================================================
+
+        normal_deductions = (
+            float(payroll["pf"] or 0)
+            + float(payroll["professional_tax"] or 0)
+        )
+
+        earned_salary = float(
+            payroll["earned_salary"] or 0
+        )
+
+        # =================================================
+        # AVAILABLE SALARY FOR ADVANCE DEDUCTION
+        # =================================================
+
+        available_for_advance = max(
+            earned_salary - normal_deductions,
+            0,
+        )
+
+        # =================================================
+        # GET APPROVED ADVANCE BALANCE
+        #
+        # Only advances having remaining_amount > 0
+        # are considered.
+        # =================================================
+
+        approved_advances = (
+            db.query(Advance)
+            .filter(
+                Advance.employee_id == employee_id,
+                Advance.status.in_(
+                    [
+                        "Approved",
+                        "Partially Paid",
+                    ]
+                ),
+                Advance.remaining_amount > 0,
+            )
+            .order_by(
+                Advance.advance_date.asc(),
+                Advance.id.asc(),
+            )
+            .all()
+        )
+
+        # =================================================
+        # CALCULATE ADVANCE DEDUCTION
+        #
+        # Never allow advance deduction to make
+        # net salary negative.
+        # =================================================
+
+        advance_deduction = 0.0
+
+        remaining_available_salary = (
+            available_for_advance
+        )
+
+        for advance in approved_advances:
+
+            if remaining_available_salary <= 0:
+                break
+
+            advance_remaining = float(
+                advance.remaining_amount or 0
+            )
+
+            deduction = min(
+                advance_remaining,
+                remaining_available_salary,
+            )
+
+            advance_deduction += deduction
+
+            remaining_available_salary -= deduction
+
+        # =================================================
+        # TOTAL DEDUCTIONS
+        # =================================================
+
+        payroll["advance_deduction"] = round(
+            advance_deduction,
+            2,
+        )
+
+        payroll["total_deductions"] = round(
+            normal_deductions
+            + advance_deduction,
+            2,
+        )
+
+        # =================================================
+        # NET SALARY
+        # =================================================
+
+        payroll["net_salary"] = round(
+            max(
+                earned_salary
+                - payroll["total_deductions"],
+                0,
+            ),
+            2,
+        )
+
+        # =================================================
         # EMPLOYEE INFORMATION
         # =================================================
 
@@ -148,13 +248,13 @@ class PayrollService:
             employee.full_name
         )
 
-        # Employee business ID
-        # Example: EMP001
+        # Example:
+        # EMP001
         payroll["employee_id"] = (
             employee.employee_id
         )
 
-        # Actual database primary key
+        # Actual database ID
         payroll["employee_db_id"] = (
             employee.id
         )
@@ -164,7 +264,6 @@ class PayrollService:
         payroll["year"] = year
 
         return payroll
-
 
     # =====================================================
     # SAVE PAYROLL
@@ -209,24 +308,16 @@ class PayrollService:
         if existing_payroll:
 
             existing_payroll.employee_name = (
-                payroll_data[
-                    "employee_name"
-                ]
+                payroll_data["employee_name"]
             )
 
             existing_payroll.employee_code = (
-                payroll_data[
-                    "employee_id"
-                ]
+                payroll_data["employee_id"]
             )
 
-            existing_payroll.month = (
-                month
-            )
+            existing_payroll.month = month
 
-            existing_payroll.year = (
-                year
-            )
+            existing_payroll.year = year
 
             existing_payroll.total_working_days = (
                 payroll_data[
@@ -301,9 +392,7 @@ class PayrollService:
             )
 
             existing_payroll.pf = (
-                payroll_data[
-                    "pf"
-                ]
+                payroll_data["pf"]
             )
 
             existing_payroll.professional_tax = (
@@ -399,9 +488,7 @@ class PayrollService:
             ),
 
             hra=(
-                payroll_data[
-                    "hra"
-                ]
+                payroll_data["hra"]
             ),
 
             allowance=(
@@ -429,9 +516,7 @@ class PayrollService:
             ),
 
             pf=(
-                payroll_data[
-                    "pf"
-                ]
+                payroll_data["pf"]
             ),
 
             professional_tax=(
@@ -453,7 +538,7 @@ class PayrollService:
             ),
         )
 
-        return (
+        saved_payroll = (
             PayrollRepository
             .create_payroll(
                 db,
@@ -461,6 +546,88 @@ class PayrollService:
             )
         )
 
+        # =================================================
+        # UPDATE ADVANCE BALANCES
+        # =================================================
+
+        advance_to_deduct = float(
+            payroll_data.get(
+                "advance_deduction",
+                0,
+            )
+        )
+
+        if advance_to_deduct > 0:
+
+            approved_advances = (
+                db.query(Advance)
+                .filter(
+                    Advance.employee_id
+                    == employee_id,
+
+                    Advance.status.in_(
+                        [
+                            "Approved",
+                            "Partially Paid",
+                        ]
+                    ),
+
+                    Advance.remaining_amount
+                    > 0,
+                )
+                .order_by(
+                    Advance.advance_date.asc(),
+                    Advance.id.asc(),
+                )
+                .all()
+            )
+
+            remaining_deduction = (
+                advance_to_deduct
+            )
+
+            for advance in approved_advances:
+
+                if remaining_deduction <= 0:
+                    break
+
+                current_balance = float(
+                    advance.remaining_amount
+                    or 0
+                )
+
+                deduction = min(
+                    current_balance,
+                    remaining_deduction,
+                )
+
+                advance.remaining_amount = round(
+                    current_balance - deduction,
+                    2,
+                )
+
+                if (
+                    advance.remaining_amount
+                    <= 0
+                ):
+                    advance.remaining_amount = 0
+
+                    advance.status = "Paid"
+
+                else:
+                    advance.status = (
+                        "Partially Paid"
+                    )
+
+                remaining_deduction -= deduction
+
+        db.commit()
+
+        db.refresh(
+            saved_payroll
+        )
+
+        return saved_payroll
 
     # =====================================================
     # GET ALL PAYROLL HISTORY
@@ -477,7 +644,6 @@ class PayrollService:
                 db
             )
         )
-
 
     # =====================================================
     # GET PAYROLL BY ID
@@ -497,7 +663,6 @@ class PayrollService:
             )
         )
 
-
     # =====================================================
     # GET EMPLOYEE PAYROLL HISTORY
     # =====================================================
@@ -515,7 +680,6 @@ class PayrollService:
                 employee_id,
             )
         )
-
 
     # =====================================================
     # DELETE PAYROLL
