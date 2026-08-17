@@ -18,6 +18,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { useNavigate } from "react-router-dom";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 const drawerWidth = 240;
 
@@ -51,6 +52,11 @@ const menuItems = [
     text: "Expenses",
     icon: <ReceiptLongIcon />,
     path: "/expenses",
+    },
+    {
+    text: "Employee Advances",
+    icon: <AccountBalanceWalletIcon />,
+    path: "/advances",
     },
     {
         text: "Equipment",

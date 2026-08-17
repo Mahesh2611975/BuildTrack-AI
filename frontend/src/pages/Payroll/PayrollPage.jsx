@@ -18,7 +18,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 
 import api from "../../services/api";
 import { getPayroll } from "../../services/payrollService";
-
+import SaveIcon from "@mui/icons-material/Save";
 
 function PayrollPage() {
 
@@ -126,7 +126,40 @@ function PayrollPage() {
 
         }
     };
+    const handleSavePayroll = async () => {
+        if (!payroll) {
+            alert("Please generate payroll first");
+            return;
+        }
 
+        try {
+            setLoading(true);
+
+            const response = await api.post(
+                `/payroll/save?employee_id=${employeeId}&year=${year}&month=${month}`
+            );
+
+            alert(
+                response.data?.message ||
+                "Payroll saved successfully"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to save payroll:",
+                error
+            );
+
+            alert(
+                error.response?.data?.detail ||
+                "Failed to save payroll"
+            );
+
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // =====================================================
     // DOWNLOAD PAYSLIP
@@ -754,6 +787,13 @@ function PayrollPage() {
                                         }
                                     </Typography>
 
+                                    <Typography>
+                                        Advance Deduction: ₹
+                                        {
+                                            payroll.advance_deduction || 0
+                                        }
+                                    </Typography>
+
                                     <Typography
                                         fontWeight="600"
                                         sx={{ mt: 1 }}
@@ -804,7 +844,16 @@ function PayrollPage() {
                                         }
                                     </Typography>
 
-
+                                    <Button
+                                        variant="contained"
+                                        fullWidth
+                                        startIcon={<SaveIcon />}
+                                        onClick={handleSavePayroll}
+                                        disabled={loading}
+                                        sx={{ mb: 2 }}
+                                    >
+                                        {loading ? "Saving..." : "Save Payroll"}
+                                    </Button>
                                     {/* DOWNLOAD PAYSLIP */}
 
                                     <Button

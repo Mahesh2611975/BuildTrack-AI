@@ -21,6 +21,7 @@ import EquipmentPage from "../pages/Equipment/EquipmentPage";
 import EquipmentAssignmentPage
     from "../pages/Equipment/EquipmentAssignmentPage";
 import ExpensesPage from "../pages/Expenses/ExpensesPage";
+import AdvancePage from "../pages/Advance/AdvancePage";
 
 function AppRoutes() {
 
@@ -98,6 +99,10 @@ function AppRoutes() {
                     <Route
                         path="expenses"
                         element={<ExpensesPage />}
+                    />
+                    <Route
+                        path="advances"
+                        element={<AdvancePage />}
                     />
                     <Route
                         path="equipment"
