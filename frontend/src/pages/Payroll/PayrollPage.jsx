@@ -844,6 +844,37 @@ function PayrollPage() {
                                         }
                                     </Typography>
 
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        Advance Taken: ₹
+                                        {payroll.advance_taken || 0}
+                                    </Typography>
+
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        This Month Deduction: ₹
+                                        {payroll.advance_deduction || 0}
+                                    </Typography>
+
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            mb: 2,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        Advance Remaining: ₹
+                                        {payroll.advance_remaining || 0}
+                                    </Typography>
+
                                     <Button
                                         variant="contained"
                                         fullWidth
