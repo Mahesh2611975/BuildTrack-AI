@@ -194,6 +194,15 @@ class PayrollService:
             available_for_advance
         )
 
+        # Total approved advance balance
+        total_advance_balance = sum(
+            float(advance.remaining_amount or 0)
+            for advance in approved_advances
+        )
+        total_advance_taken = sum(
+            float(advance.amount or 0)
+            for advance in approved_advances
+        )
         for advance in approved_advances:
 
             if remaining_available_salary <= 0:
@@ -212,6 +221,13 @@ class PayrollService:
 
             remaining_available_salary -= deduction
 
+
+        # Remaining advance balance after this month's deduction
+        advance_remaining_total = max(
+            total_advance_balance - advance_deduction,
+            0,
+        )
+
         # =================================================
         # TOTAL DEDUCTIONS
         # =================================================
@@ -220,7 +236,14 @@ class PayrollService:
             advance_deduction,
             2,
         )
-
+        payroll["advance_remaining"] = round(
+            advance_remaining_total,
+            2,
+        )
+        payroll["advance_taken"] = round(
+            total_advance_taken,
+            2,
+        )
         payroll["total_deductions"] = round(
             normal_deductions
             + advance_deduction,

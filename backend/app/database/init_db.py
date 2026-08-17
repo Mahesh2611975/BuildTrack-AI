@@ -21,6 +21,7 @@ from app.models.equipment_assignment import EquipmentAssignment
 from app.models.equipment_work_log import EquipmentWorkLog
 from app.models.salary_structure import SalaryStructure
 from app.models.payroll import Payroll
+from app.models.advance_transaction import AdvanceTransaction
 
 
 def init_db():

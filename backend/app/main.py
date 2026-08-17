@@ -47,6 +47,9 @@ from app.api.project_summary import (
 from app.api.payroll_history import (
     router as payroll_history_router,
 )
+from app.api.advance_transaction import (
+    router as advance_transaction_router,
+)
 # Custom Exceptions
 from app.core.exceptions import (
     NotFoundException,
@@ -131,7 +134,8 @@ app.include_router(report_router)
 app.include_router(salary_structure_router)
 app.include_router(payroll_router)
 app.include_router(payroll_history_router)
-
+app.include_router(advance_transaction_router
+                   )
 app.add_exception_handler(
     HTTPException,
     http_exception_handler,
