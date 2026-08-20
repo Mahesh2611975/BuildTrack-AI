@@ -5,8 +5,12 @@ import SearchBar from "../../components/common/SearchBar";
 
 import AdvanceTable from "./AdvanceTable";
 import AdvanceDialog from "./AdvanceDialog";
+import DailyAdvanceDialog from "./DailyAdvanceDialog";
+import DailyAdvanceTable from "./DailyAdvanceTable";
+
 import useEmployees from "../../hooks/useEmployees";
 import useAdvances from "../../hooks/useAdvances";
+import useDailyAdvances from "../../hooks/useDailyAdvances";
 
 import {
     createAdvance,
@@ -14,8 +18,16 @@ import {
     deleteAdvance,
 } from "../../services/advanceService";
 
+import {
+    createDailyAdvance,
+} from "../../services/dailyAdvanceService";
+
 
 function AdvancePage() {
+
+    // ==========================================================
+    // MAIN ADVANCE STATE
+    // ==========================================================
 
     const [search, setSearch] =
         useState("");
@@ -29,19 +41,50 @@ function AdvancePage() {
     ] = useState(null);
 
 
+    // ==========================================================
+    // DAILY ADVANCE STATE
+    // ==========================================================
+
+    const [
+        dailyAdvanceOpen,
+        setDailyAdvanceOpen,
+    ] = useState(false);
+
+
+    // ==========================================================
+    // MAIN ADVANCES
+    // ==========================================================
+
     const {
         advances,
         loading,
         refreshAdvances,
     } = useAdvances();
-    
+
+
+    // ==========================================================
+    // DAILY ADVANCES
+    // ==========================================================
+
+    const {
+        transactions,
+        loading: dailyAdvancesLoading,
+        refreshTransactions,
+    } = useDailyAdvances();
+
+
+    // ==========================================================
+    // EMPLOYEES
+    // ==========================================================
+
     const {
         employees,
         loading: employeesLoading,
     } = useEmployees();
 
+
     // ==========================================================
-    // SEARCH
+    // SEARCH MAIN ADVANCES
     // ==========================================================
 
     const filteredAdvances =
@@ -51,18 +94,25 @@ function AdvancePage() {
                 search.toLowerCase();
 
             return (
+
                 advance.advance_code
                     ?.toLowerCase()
-                    .includes(searchText) ||
+                    .includes(searchText)
+
+                ||
 
                 String(
                     advance.employee_id
                 )
-                    .includes(searchText) ||
+                    .includes(searchText)
+
+                ||
 
                 advance.reason
                     ?.toLowerCase()
-                    .includes(searchText) ||
+                    .includes(searchText)
+
+                ||
 
                 advance.status
                     ?.toLowerCase()
@@ -72,10 +122,12 @@ function AdvancePage() {
 
 
     // ==========================================================
-    // CREATE / UPDATE
+    // CREATE / UPDATE MAIN ADVANCE
     // ==========================================================
 
-    const handleSubmit = async (data) => {
+    const handleSubmit = async (
+        data
+    ) => {
 
         try {
 
@@ -92,7 +144,9 @@ function AdvancePage() {
 
             } else {
 
-                await createAdvance(data);
+                await createAdvance(
+                    data
+                );
 
                 alert(
                     "Advance Added Successfully"
@@ -102,7 +156,9 @@ function AdvancePage() {
 
             setOpen(false);
 
-            setSelectedAdvance(null);
+            setSelectedAdvance(
+                null
+            );
 
             await refreshAdvances();
 
@@ -122,10 +178,51 @@ function AdvancePage() {
 
 
     // ==========================================================
-    // EDIT
+    // CREATE DAILY ADVANCE
     // ==========================================================
 
-    const handleEdit = (advance) => {
+    const handleDailyAdvanceSubmit =
+        async (data) => {
+
+            try {
+
+                await createDailyAdvance(
+                    data
+                );
+
+                // Refresh daily advance history
+                await refreshTransactions();
+
+                alert(
+                    "Daily Advance Added Successfully"
+                );
+
+                setDailyAdvanceOpen(
+                    false
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Daily advance failed:",
+                    error
+                );
+
+                alert(
+                    error.response?.data?.detail ||
+                    "Failed to add daily advance"
+                );
+            }
+        };
+
+
+    // ==========================================================
+    // EDIT MAIN ADVANCE
+    // ==========================================================
+
+    const handleEdit = (
+        advance
+    ) => {
 
         setSelectedAdvance(
             advance
@@ -136,7 +233,7 @@ function AdvancePage() {
 
 
     // ==========================================================
-    // DELETE
+    // DELETE MAIN ADVANCE
     // ==========================================================
 
     const handleDelete = async (
@@ -181,23 +278,89 @@ function AdvancePage() {
     };
 
 
+    // ==========================================================
+    // OPEN MAIN ADVANCE
+    // ==========================================================
+
+    const handleOpenAdvance = () => {
+
+        setSelectedAdvance(
+            null
+        );
+
+        setOpen(true);
+    };
+
+
+    // ==========================================================
+    // OPEN DAILY ADVANCE
+    // ==========================================================
+
+    const handleOpenDailyAdvance = () => {
+
+        setDailyAdvanceOpen(
+            true
+        );
+    };
+
+
+    // ==========================================================
+    // RENDER
+    // ==========================================================
+
     return (
         <>
+
+            {/* ==================================================
+                PAGE HEADER
+            ================================================== */}
 
             <PageHeader
                 title="Employee Advances"
                 subtitle="Manage employee salary advances"
                 buttonText="Add Advance"
-                onClick={() => {
-
-                    setSelectedAdvance(
-                        null
-                    );
-
-                    setOpen(true);
-                }}
+                onClick={
+                    handleOpenAdvance
+                }
             />
 
+
+            {/* ==================================================
+                DAILY ADVANCE BUTTON
+            ================================================== */}
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginBottom: "16px",
+                }}
+            >
+
+                <button
+                    type="button"
+                    onClick={
+                        handleOpenDailyAdvance
+                    }
+                    style={{
+                        padding: "10px 18px",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                    }}
+                >
+
+                    + Daily Advance
+
+                </button>
+
+            </div>
+
+
+            {/* ==================================================
+                SEARCH
+            ================================================== */}
 
             <SearchBar
                 value={search}
@@ -210,17 +373,51 @@ function AdvancePage() {
             />
 
 
+            {/* ==================================================
+                MAIN ADVANCE TABLE
+            ================================================== */}
+
             <AdvanceTable
-                rows={filteredAdvances}
-                employees={employees}
+                rows={
+                    filteredAdvances
+                }
+                employees={
+                    employees
+                }
                 loading={
                     loading ||
                     employeesLoading
                 }
-                onEdit={handleEdit}
-                onDelete={handleDelete}
+                onEdit={
+                    handleEdit
+                }
+                onDelete={
+                    handleDelete
+                }
             />
 
+
+            {/* ==================================================
+                DAILY ADVANCE HISTORY
+            ================================================== */}
+
+            <DailyAdvanceTable
+                rows={
+                    transactions
+                }
+                employees={
+                    employees
+                }
+                loading={
+                    dailyAdvancesLoading ||
+                    employeesLoading
+                }
+            />
+
+
+            {/* ==================================================
+                MAIN ADVANCE DIALOG
+            ================================================== */}
 
             <AdvanceDialog
                 open={open}
@@ -232,9 +429,31 @@ function AdvancePage() {
                         null
                     );
                 }}
-                onSubmit={handleSubmit}
+                onSubmit={
+                    handleSubmit
+                }
                 advance={
                     selectedAdvance
+                }
+            />
+
+
+            {/* ==================================================
+                DAILY ADVANCE DIALOG
+            ================================================== */}
+
+            <DailyAdvanceDialog
+                open={
+                    dailyAdvanceOpen
+                }
+                handleClose={() => {
+
+                    setDailyAdvanceOpen(
+                        false
+                    );
+                }}
+                onSubmit={
+                    handleDailyAdvanceSubmit
                 }
             />
 
