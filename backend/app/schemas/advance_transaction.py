@@ -1,11 +1,10 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
-
-# ==========================================================
-# CREATE ADVANCE TRANSACTION
-# ==========================================================
 
 class AdvanceTransactionCreate(BaseModel):
 
@@ -22,10 +21,6 @@ class AdvanceTransactionCreate(BaseModel):
 
     reason: str | None = None
 
-
-# ==========================================================
-# RESPONSE
-# ==========================================================
 
 class AdvanceTransactionResponse(BaseModel):
 

@@ -42,7 +42,7 @@ def create_transaction(
     current_admin=Depends(get_current_admin),
 ):
 
-    transaction = (
+    return (
         AdvanceTransactionService
         .create_transaction(
             db,
@@ -50,17 +50,9 @@ def create_transaction(
         )
     )
 
-    if transaction is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Advance account not found",
-        )
-
-    return transaction
-
 
 # ==========================================================
-# GET ALL TRANSACTIONS
+# GET ALL DAILY ADVANCES
 # ==========================================================
 
 @router.get(
@@ -76,12 +68,14 @@ def get_all_transactions(
 
     return (
         AdvanceTransactionService
-        .get_all_transactions(db)
+        .get_all_transactions(
+            db
+        )
     )
 
 
 # ==========================================================
-# GET TRANSACTIONS BY EMPLOYEE
+# GET DAILY ADVANCES BY EMPLOYEE
 # ==========================================================
 
 @router.get(
@@ -106,7 +100,7 @@ def get_transactions_by_employee(
 
 
 # ==========================================================
-# GET TRANSACTIONS BY ADVANCE
+# GET DAILY ADVANCES BY MAIN ADVANCE
 # ==========================================================
 
 @router.get(
@@ -153,16 +147,17 @@ def get_transaction(
     )
 
     if transaction is None:
+
         raise HTTPException(
             status_code=404,
-            detail="Advance transaction not found",
+            detail="Daily advance transaction not found",
         )
 
     return transaction
 
 
 # ==========================================================
-# DELETE TRANSACTION
+# DELETE DAILY ADVANCE
 # ==========================================================
 
 @router.delete(
@@ -182,16 +177,17 @@ def delete_transaction(
         )
     )
 
-    if not deleted:
+    if deleted is None:
+
         raise HTTPException(
             status_code=404,
-            detail="Advance transaction not found",
+            detail="Daily advance transaction not found",
         )
 
     return {
         "success": True,
         "message": (
-            "Advance transaction "
+            "Daily advance transaction "
             "deleted successfully"
         ),
     }

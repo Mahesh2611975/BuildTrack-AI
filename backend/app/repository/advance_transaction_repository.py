@@ -1,14 +1,12 @@
 from sqlalchemy.orm import Session
 
-from app.models.advance_transaction import (
-    AdvanceTransaction,
-)
+from app.models.advance_transaction import AdvanceTransaction
 
 
 class AdvanceTransactionRepository:
 
     # ==========================================================
-    # CREATE
+    # CREATE TRANSACTION
     # ==========================================================
 
     @staticmethod
@@ -26,7 +24,7 @@ class AdvanceTransactionRepository:
         return transaction
 
     # ==========================================================
-    # GET ALL
+    # GET ALL TRANSACTIONS
     # ==========================================================
 
     @staticmethod
@@ -35,19 +33,15 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(
-                AdvanceTransaction
-            )
+            db.query(AdvanceTransaction)
             .order_by(
-                AdvanceTransaction
-                .transaction_date
-                .desc()
+                AdvanceTransaction.transaction_date.desc()
             )
             .all()
         )
 
     # ==========================================================
-    # GET BY ID
+    # GET TRANSACTION BY ID
     # ==========================================================
 
     @staticmethod
@@ -57,9 +51,7 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(
-                AdvanceTransaction
-            )
+            db.query(AdvanceTransaction)
             .filter(
                 AdvanceTransaction.id
                 == transaction_id
@@ -68,7 +60,7 @@ class AdvanceTransactionRepository:
         )
 
     # ==========================================================
-    # GET BY EMPLOYEE
+    # GET TRANSACTIONS BY EMPLOYEE
     # ==========================================================
 
     @staticmethod
@@ -78,23 +70,19 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(
-                AdvanceTransaction
-            )
+            db.query(AdvanceTransaction)
             .filter(
                 AdvanceTransaction.employee_id
                 == employee_id
             )
             .order_by(
-                AdvanceTransaction
-                .transaction_date
-                .desc()
+                AdvanceTransaction.transaction_date.desc()
             )
             .all()
         )
 
     # ==========================================================
-    # GET BY ADVANCE
+    # GET TRANSACTIONS BY ADVANCE
     # ==========================================================
 
     @staticmethod
@@ -104,23 +92,19 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(
-                AdvanceTransaction
-            )
+            db.query(AdvanceTransaction)
             .filter(
                 AdvanceTransaction.advance_id
                 == advance_id
             )
             .order_by(
-                AdvanceTransaction
-                .transaction_date
-                .desc()
+                AdvanceTransaction.transaction_date.desc()
             )
             .all()
         )
 
     # ==========================================================
-    # DELETE
+    # DELETE TRANSACTION
     # ==========================================================
 
     @staticmethod
@@ -132,3 +116,5 @@ class AdvanceTransactionRepository:
         db.delete(transaction)
 
         db.commit()
+
+        return True

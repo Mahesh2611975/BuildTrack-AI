@@ -128,11 +128,43 @@ class Payroll(Base):
         default=0,
         nullable=False,
     )
+
+    # ==========================================================
+    # ADVANCE DETAILS
+    # ==========================================================
+
+    # Original/main employee advance amount
+    main_advance_amount = Column(
+        Float,
+        default=0,
+        nullable=False,
+    )
+
+    # Total daily advances taken during the payroll month
+    advance_taken = Column(
+        Float,
+        default=0,
+        nullable=False,
+    )
+
+    # Daily advance deducted from this month's salary
     advance_deduction = Column(
         Float,
         default=0,
         nullable=False,
     )
+
+    # Remaining balance of the main advance
+    advance_remaining = Column(
+        Float,
+        default=0,
+        nullable=False,
+    )
+
+    # ==========================================================
+    # TOTAL PAYROLL DEDUCTIONS
+    # ==========================================================
+
     total_deductions = Column(
         Float,
         default=0,

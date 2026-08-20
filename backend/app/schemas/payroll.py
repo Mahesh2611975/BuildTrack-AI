@@ -53,6 +53,7 @@ class PayrollResponse(BaseModel):
 
     pf: float
     professional_tax: float
+    main_advance_amount: float
     advance_taken: float
     advance_deduction: float
     advance_remaining: float

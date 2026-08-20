@@ -2,10 +2,10 @@ from sqlalchemy import (
     Column,
     Integer,
     Float,
-    String,
     Date,
-    DateTime,
+    String,
     ForeignKey,
+    DateTime,
 )
 
 from sqlalchemy.sql import func
@@ -42,20 +42,20 @@ class AdvanceTransaction(Base):
     )
 
     # ==========================================================
-    # ADVANCE ACCOUNT
+    # MAIN ADVANCE
     # ==========================================================
 
     advance_id = Column(
         Integer,
         ForeignKey(
             "advances.id",
-            ondelete="CASCADE",
+            ondelete="SET NULL",
         ),
         nullable=True,
     )
 
     # ==========================================================
-    # TRANSACTION AMOUNT
+    # DAILY AMOUNT
     # ==========================================================
 
     amount = Column(
