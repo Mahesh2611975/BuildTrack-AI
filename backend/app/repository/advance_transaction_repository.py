@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
-from app.models.advance_transaction import AdvanceTransaction
+from app.models.advance_transaction import (
+    AdvanceTransaction,
+)
 
 
 class AdvanceTransactionRepository:
@@ -33,9 +35,13 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(AdvanceTransaction)
+            db.query(
+                AdvanceTransaction
+            )
             .order_by(
-                AdvanceTransaction.transaction_date.desc()
+                AdvanceTransaction
+                .transaction_date
+                .desc()
             )
             .all()
         )
@@ -51,7 +57,9 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(AdvanceTransaction)
+            db.query(
+                AdvanceTransaction
+            )
             .filter(
                 AdvanceTransaction.id
                 == transaction_id
@@ -70,19 +78,23 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(AdvanceTransaction)
+            db.query(
+                AdvanceTransaction
+            )
             .filter(
                 AdvanceTransaction.employee_id
                 == employee_id
             )
             .order_by(
-                AdvanceTransaction.transaction_date.desc()
+                AdvanceTransaction
+                .transaction_date
+                .desc()
             )
             .all()
         )
 
     # ==========================================================
-    # GET TRANSACTIONS BY ADVANCE
+    # GET TRANSACTIONS BY MAIN ADVANCE
     # ==========================================================
 
     @staticmethod
@@ -92,13 +104,17 @@ class AdvanceTransactionRepository:
     ):
 
         return (
-            db.query(AdvanceTransaction)
+            db.query(
+                AdvanceTransaction
+            )
             .filter(
                 AdvanceTransaction.advance_id
                 == advance_id
             )
             .order_by(
-                AdvanceTransaction.transaction_date.desc()
+                AdvanceTransaction
+                .transaction_date
+                .desc()
             )
             .all()
         )
@@ -113,7 +129,9 @@ class AdvanceTransactionRepository:
         transaction: AdvanceTransaction,
     ):
 
-        db.delete(transaction)
+        db.delete(
+            transaction
+        )
 
         db.commit()
 

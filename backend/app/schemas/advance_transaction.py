@@ -10,6 +10,11 @@ class AdvanceTransactionCreate(BaseModel):
 
     employee_id: int
 
+    # Optional link to a main advance.
+    #
+    # Usually for our daily advance system
+    # this can remain None.
+
     advance_id: int | None = None
 
     amount: float = Field(

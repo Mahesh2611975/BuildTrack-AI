@@ -29,7 +29,34 @@ class AdvanceTransactionService:
     ):
 
         # ======================================================
-        # VALIDATE MAIN ADVANCE IF PROVIDED
+        # OPTIONAL MAIN ADVANCE
+        # ======================================================
+        #
+        # advance_id is optional.
+        #
+        # If advance_id is provided:
+        #     validate that the main advance exists
+        #     and belongs to the employee.
+        #
+        # If advance_id is None:
+        #     this is simply a daily advance transaction.
+        #
+        # IMPORTANT:
+        # We DO NOT create a new Advance here.
+        # We DO NOT increase Advance.amount.
+        # We DO NOT increase Advance.remaining_amount.
+        #
+        # Example:
+        #
+        # Main Advance = ₹10,000
+        #
+        # Daily:
+        # Food    ₹200
+        # Travel  ₹300
+        #
+        # Daily total = ₹500
+        #
+        # Main Advance remains ₹10,000.
         # ======================================================
 
         if request.advance_id is not None:
@@ -46,8 +73,8 @@ class AdvanceTransactionService:
             if advance is None:
                 return None
 
-            # Make sure advance belongs
-            # to the selected employee
+            # Make sure the main advance
+            # belongs to this employee
             if (
                 advance.employee_id
                 != request.employee_id
@@ -56,26 +83,14 @@ class AdvanceTransactionService:
 
         # ======================================================
         # CREATE DAILY TRANSACTION
-        #
-        # IMPORTANT:
-        # This does NOT modify the main advance amount.
-        #
-        # Example:
-        #
-        # Main Advance = ₹10,000
-        #
-        # Daily transactions:
-        # Food      = ₹100
-        # Travel    = ₹200
-        # Personal  = ₹500
-        #
-        # These are tracked separately.
         # ======================================================
 
         transaction = AdvanceTransaction(
 
             employee_id=request.employee_id,
 
+            # Can be None.
+            # This is intentional.
             advance_id=request.advance_id,
 
             amount=request.amount,
@@ -87,6 +102,10 @@ class AdvanceTransactionService:
             reason=request.reason,
         )
 
+        # ======================================================
+        # SAVE DAILY TRANSACTION
+        # ======================================================
+
         return (
             AdvanceTransactionRepository
             .create_transaction(
@@ -96,7 +115,7 @@ class AdvanceTransactionService:
         )
 
     # ==========================================================
-    # GET ALL TRANSACTIONS
+    # GET ALL DAILY TRANSACTIONS
     # ==========================================================
 
     @staticmethod
@@ -148,7 +167,7 @@ class AdvanceTransactionService:
         )
 
     # ==========================================================
-    # GET TRANSACTIONS BY ADVANCE
+    # GET TRANSACTIONS BY MAIN ADVANCE
     # ==========================================================
 
     @staticmethod
@@ -166,7 +185,7 @@ class AdvanceTransactionService:
         )
 
     # ==========================================================
-    # GET TOTAL DAILY ADVANCE BY EMPLOYEE
+    # GET TOTAL DAILY ADVANCES BY EMPLOYEE
     # ==========================================================
 
     @staticmethod
@@ -184,14 +203,19 @@ class AdvanceTransactionService:
         )
 
         total = sum(
-            float(transaction.amount or 0)
+            float(
+                transaction.amount or 0
+            )
             for transaction in transactions
         )
 
-        return round(total, 2)
+        return round(
+            total,
+            2,
+        )
 
     # ==========================================================
-    # DELETE TRANSACTION
+    # DELETE DAILY TRANSACTION
     # ==========================================================
 
     @staticmethod
@@ -210,6 +234,13 @@ class AdvanceTransactionService:
 
         if transaction is None:
             return None
+
+        # IMPORTANT:
+        #
+        # We only delete the daily transaction.
+        #
+        # We DO NOT modify the main advance.
+        #
 
         AdvanceTransactionRepository.delete_transaction(
             db,
