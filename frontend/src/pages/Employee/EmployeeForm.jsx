@@ -54,38 +54,28 @@ function EmployeeForm({
         is_active: true,
     });
 
-
     const [errors, setErrors] = useState({});
 
+
+    // =====================================================
+    // LOAD EMPLOYEE FOR EDIT
+    // =====================================================
 
     useEffect(() => {
 
         if (employee) {
 
             setFormData({
-                full_name:
-                    employee.full_name || "",
-
-                mobile_number:
-                    employee.mobile_number || "",
-
-                email:
-                    employee.email || "",
-
-                designation:
-                    employee.designation || "",
-
-                department:
-                    employee.department || "",
-
-                salary:
-                    employee.salary ?? "",
-
-                joining_date:
-                    employee.joining_date || "",
-
-                is_active:
-                    employee.is_active ?? true,
+                full_name: employee.full_name || "",
+                mobile_number: employee.mobile_number || "",
+                email: employee.email || "",
+                designation: employee.designation || "",
+                department: employee.department || "",
+                salary: employee.salary ?? "",
+                joining_date: employee.joining_date
+                    ? employee.joining_date.substring(0, 10)
+                    : "",
+                is_active: employee.is_active ?? true,
             });
 
         } else {
@@ -108,6 +98,10 @@ function EmployeeForm({
     }, [employee]);
 
 
+    // =====================================================
+    // HANDLE CHANGE
+    // =====================================================
+
     const handleChange = (event) => {
 
         const {
@@ -115,39 +109,33 @@ function EmployeeForm({
             value,
         } = event.target;
 
+        setFormData((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
 
-        setFormData(
-            (previous) => ({
-                ...previous,
-                [name]: value,
-            })
-        );
-
-
-        setErrors(
-            (previous) => ({
-                ...previous,
-                [name]: "",
-            })
-        );
+        setErrors((previous) => ({
+            ...previous,
+            [name]: "",
+        }));
     };
 
+
+    // =====================================================
+    // VALIDATION
+    // =====================================================
 
     const validate = () => {
 
         const newErrors = {};
 
 
-        // Full name
         if (!formData.full_name.trim()) {
-
             newErrors.full_name =
                 "Employee Name is required";
-
         }
 
 
-        // Mobile
         if (!formData.mobile_number.trim()) {
 
             newErrors.mobile_number =
@@ -161,11 +149,9 @@ function EmployeeForm({
 
             newErrors.mobile_number =
                 "Enter a valid 10-digit mobile number";
-
         }
 
 
-        // Email
         if (!formData.email.trim()) {
 
             newErrors.email =
@@ -179,29 +165,21 @@ function EmployeeForm({
 
             newErrors.email =
                 "Enter a valid email address";
-
         }
 
 
-        // Designation
         if (!formData.designation) {
-
             newErrors.designation =
                 "Designation is required";
-
         }
 
 
-        // Department
         if (!formData.department) {
-
             newErrors.department =
                 "Department is required";
-
         }
 
 
-        // Salary
         if (
             formData.salary === "" ||
             formData.salary === null
@@ -216,36 +194,32 @@ function EmployeeForm({
 
             newErrors.salary =
                 "Salary must be greater than 0";
-
         }
 
 
-        // Joining date
         if (!formData.joining_date) {
-
             newErrors.joining_date =
                 "Joining date is required";
-
         }
 
 
         setErrors(newErrors);
 
-        return (
-            Object.keys(newErrors).length === 0
-        );
+        return Object.keys(newErrors).length === 0;
     };
 
+
+    // =====================================================
+    // SUBMIT
+    // =====================================================
 
     const handleSubmit = (event) => {
 
         event.preventDefault();
 
-
         if (!validate()) {
             return;
         }
-
 
         const data = {
 
@@ -274,10 +248,56 @@ function EmployeeForm({
                 Boolean(formData.is_active),
         };
 
-
         onSubmit(data);
     };
 
+
+    // =====================================================
+    // FIELD STYLE
+    // =====================================================
+
+    const fieldSx = {
+
+        "& .MuiOutlinedInput-root": {
+
+            borderRadius: "12px",
+
+            backgroundColor: "#fffdf8",
+
+            "& fieldset": {
+                borderColor: "#dfcdb5",
+            },
+
+            "&:hover fieldset": {
+                borderColor: "#dca62f",
+            },
+
+            "&.Mui-focused fieldset": {
+                borderColor: "#dca62f",
+                borderWidth: "2px",
+            },
+
+        },
+
+        "& .MuiInputLabel-root": {
+            color: "#8a7568",
+        },
+
+        "& .MuiInputLabel-root.Mui-focused": {
+            color: "#bd8a20",
+        },
+
+        "& .MuiFormHelperText-root": {
+            marginLeft: "4px",
+            color: "#8a7568",
+        },
+
+    };
+
+
+    // =====================================================
+    // RENDER
+    // =====================================================
 
     return (
 
@@ -288,11 +308,16 @@ function EmployeeForm({
 
             <Grid
                 container
-                spacing={2}
-                mt={1}
+                spacing={2.5}
+                sx={{
+                    mt: 0.5,
+                    pb: 1,
+                }}
             >
 
-                {/* Name */}
+                {/* ================================================= */}
+                {/* EMPLOYEE NAME */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -306,24 +331,19 @@ function EmployeeForm({
                         required
                         label="Employee Name"
                         name="full_name"
-                        value={
-                            formData.full_name
-                        }
+                        value={formData.full_name}
                         onChange={handleChange}
-                        error={
-                            Boolean(
-                                errors.full_name
-                            )
-                        }
-                        helperText={
-                            errors.full_name
-                        }
+                        error={Boolean(errors.full_name)}
+                        helperText={errors.full_name || " "}
+                        sx={fieldSx}
                     />
 
                 </Grid>
 
 
-                {/* Mobile */}
+                {/* ================================================= */}
+                {/* MOBILE */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -337,28 +357,25 @@ function EmployeeForm({
                         required
                         label="Mobile Number"
                         name="mobile_number"
-                        value={
-                            formData.mobile_number
-                        }
+                        value={formData.mobile_number}
                         onChange={handleChange}
                         inputProps={{
                             maxLength: 10,
                         }}
-                        error={
-                            Boolean(
-                                errors.mobile_number
-                            )
-                        }
+                        error={Boolean(errors.mobile_number)}
                         helperText={
                             errors.mobile_number ||
                             "Enter 10-digit mobile number"
                         }
+                        sx={fieldSx}
                     />
 
                 </Grid>
 
 
-                {/* Email */}
+                {/* ================================================= */}
+                {/* EMAIL */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -373,24 +390,19 @@ function EmployeeForm({
                         type="email"
                         label="Email"
                         name="email"
-                        value={
-                            formData.email
-                        }
+                        value={formData.email}
                         onChange={handleChange}
-                        error={
-                            Boolean(
-                                errors.email
-                            )
-                        }
-                        helperText={
-                            errors.email
-                        }
+                        error={Boolean(errors.email)}
+                        helperText={errors.email || " "}
+                        sx={fieldSx}
                     />
 
                 </Grid>
 
 
-                {/* Designation */}
+                {/* ================================================= */}
+                {/* DESIGNATION */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -405,18 +417,11 @@ function EmployeeForm({
                         required
                         label="Designation"
                         name="designation"
-                        value={
-                            formData.designation
-                        }
+                        value={formData.designation}
                         onChange={handleChange}
-                        error={
-                            Boolean(
-                                errors.designation
-                            )
-                        }
-                        helperText={
-                            errors.designation
-                        }
+                        error={Boolean(errors.designation)}
+                        helperText={errors.designation || " "}
+                        sx={fieldSx}
                     >
 
                         <MenuItem value="">
@@ -427,12 +432,8 @@ function EmployeeForm({
                             (designation) => (
 
                                 <MenuItem
-                                    key={
-                                        designation
-                                    }
-                                    value={
-                                        designation
-                                    }
+                                    key={designation}
+                                    value={designation}
                                 >
                                     {designation}
                                 </MenuItem>
@@ -445,7 +446,9 @@ function EmployeeForm({
                 </Grid>
 
 
-                {/* Department */}
+                {/* ================================================= */}
+                {/* DEPARTMENT */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -460,18 +463,11 @@ function EmployeeForm({
                         required
                         label="Department"
                         name="department"
-                        value={
-                            formData.department
-                        }
+                        value={formData.department}
                         onChange={handleChange}
-                        error={
-                            Boolean(
-                                errors.department
-                            )
-                        }
-                        helperText={
-                            errors.department
-                        }
+                        error={Boolean(errors.department)}
+                        helperText={errors.department || " "}
+                        sx={fieldSx}
                     >
 
                         <MenuItem value="">
@@ -482,12 +478,8 @@ function EmployeeForm({
                             (department) => (
 
                                 <MenuItem
-                                    key={
-                                        department
-                                    }
-                                    value={
-                                        department
-                                    }
+                                    key={department}
+                                    value={department}
                                 >
                                     {department}
                                 </MenuItem>
@@ -500,7 +492,9 @@ function EmployeeForm({
                 </Grid>
 
 
-                {/* Salary */}
+                {/* ================================================= */}
+                {/* SALARY */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -515,28 +509,25 @@ function EmployeeForm({
                         type="number"
                         label="Salary"
                         name="salary"
-                        value={
-                            formData.salary
-                        }
+                        value={formData.salary}
                         onChange={handleChange}
                         inputProps={{
                             min: 1,
                         }}
-                        error={
-                            Boolean(
-                                errors.salary
-                            )
-                        }
+                        error={Boolean(errors.salary)}
                         helperText={
                             errors.salary ||
                             "Enter monthly salary"
                         }
+                        sx={fieldSx}
                     />
 
                 </Grid>
 
 
-                {/* Joining Date */}
+                {/* ================================================= */}
+                {/* JOINING DATE */}
+                {/* ================================================= */}
 
                 <Grid
                     size={{
@@ -544,34 +535,28 @@ function EmployeeForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         required
                         type="date"
                         label="Joining Date"
                         name="joining_date"
-                        value={
-                            formData.joining_date
-                        }
+                        value={formData.joining_date}
                         onChange={handleChange}
-                        InputLabelProps={{
-                            shrink: true,
+                        error={Boolean(errors.joining_date)}
+                        helperText={errors.joining_date || " "}
+                        sx={fieldSx}
+                        slotProps={{
+                            inputLabel: {
+                                shrink: true,
+                            },
                         }}
-                        error={
-                            Boolean(
-                                errors.joining_date
-                            )
-                        }
-                        helperText={
-                            errors.joining_date
-                        }
                     />
-
                 </Grid>
 
-
-                {/* Status */}
+                {/* ================================================= */}
+                {/* STATUS - EDIT ONLY */}
+                {/* ================================================= */}
 
                 {employee && (
 
@@ -588,24 +573,23 @@ function EmployeeForm({
                             label="Status"
                             name="is_active"
                             value={
-                                formData.is_active
+                                String(
+                                    formData.is_active
+                                )
                             }
                             onChange={(event) => {
 
                                 setFormData(
-                                    (
-                                        previous
-                                    ) => ({
+                                    (previous) => ({
                                         ...previous,
                                         is_active:
-                                            event
-                                                .target
-                                                .value ===
+                                            event.target.value ===
                                             "true",
                                     })
                                 );
 
                             }}
+                            sx={fieldSx}
                         >
 
                             <MenuItem value="true">
@@ -623,15 +607,47 @@ function EmployeeForm({
                 )}
 
 
-                {/* Save */}
+                {/* ================================================= */}
+                {/* SAVE / UPDATE */}
+                {/* ================================================= */}
 
-                <Grid size={{ xs: 12 }}>
+                <Grid
+                    size={{
+                        xs: 12,
+                    }}
+                >
 
                     <Button
                         fullWidth
                         variant="contained"
                         type="submit"
                         size="large"
+                        sx={{
+                            mt: 0.5,
+                            py: 1.35,
+
+                            borderRadius: "12px",
+
+                            background:
+                                "linear-gradient(90deg, #dca62f, #c89425)",
+
+                            color: "#2d211d",
+
+                            fontSize: "15px",
+
+                            fontWeight: 800,
+
+                            boxShadow:
+                                "0 5px 12px rgba(190, 140, 32, 0.28)",
+
+                            "&:hover": {
+                                background:
+                                    "linear-gradient(90deg, #c89425, #b9821c)",
+
+                                boxShadow:
+                                    "0 7px 16px rgba(190, 140, 32, 0.35)",
+                            },
+                        }}
                     >
                         {employee
                             ? "UPDATE EMPLOYEE"

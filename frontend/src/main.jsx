@@ -14,12 +14,18 @@ import theme from "./theme/theme";
 
 import { AuthProvider } from "./context/AuthContext";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+import "./index.css";   // ✅ IMPORTANT
+
+ReactDOM.createRoot(
+    document.getElementById("root")
+).render(
     <React.StrictMode>
         <AuthProvider>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
+
                 <App />
+
             </ThemeProvider>
         </AuthProvider>
     </React.StrictMode>

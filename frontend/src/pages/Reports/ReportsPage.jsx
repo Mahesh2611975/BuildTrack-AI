@@ -6,7 +6,16 @@ import {
     Card,
     CardContent,
     CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    FormControl,
     Grid,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
     Typography,
 } from "@mui/material";
 
@@ -15,8 +24,7 @@ import EngineeringIcon from "@mui/icons-material/Engineering";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-
-import api from "../../services/api";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 import {
     downloadEmployeeReport,
@@ -26,54 +34,76 @@ import {
 } from "../../services/reportService";
 
 
+const GOLD = "#dca62f";
+const GOLD_DARK = "#bd8a20";
+const BROWN = "#3b2823";
+const TEXT = "#2d211d";
+const MUTED = "#8a7568";
+const CREAM = "#fffaf0";
+const BORDER = "#eadfca";
+
+
 function ReportsPage() {
 
     const [summary, setSummary] = useState(null);
-
     const [loading, setLoading] = useState(true);
 
+    // PDF dialog
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [reportType, setReportType] = useState("");
+
+    const [employeeId, setEmployeeId] = useState("");
+    const [projectId, setProjectId] = useState("");
+    const [year, setYear] = useState(
+        new Date().getFullYear()
+    );
+    const [month, setMonth] = useState(
+        new Date().getMonth() + 1
+    );
+
+    const [generating, setGenerating] = useState(false);
+
 
     // =====================================================
-    // LOAD MANAGEMENT SUMMARY
+    // LOAD SUMMARY
     // =====================================================
+
+    const fetchSummary = async () => {
+
+        try {
+
+            setLoading(true);
+
+            const response =
+                await getManagementSummary();
+
+            setSummary(
+                response.data?.data || null
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to load report summary:",
+                error
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
 
     useEffect(() => {
-
-        const fetchSummary = async () => {
-
-            try {
-
-                setLoading(true);
-
-                const response =
-                    await getManagementSummary();
-
-                setSummary(
-                    response.data?.data || null
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Failed to load report summary:",
-                    error
-                );
-
-            } finally {
-
-                setLoading(false);
-
-            }
-
-        };
-
         fetchSummary();
-
     }, []);
 
 
     // =====================================================
-    // DOWNLOAD PDF HELPER
+    // DOWNLOAD PDF
     // =====================================================
 
     const downloadPdf = (
@@ -108,151 +138,134 @@ function ReportsPage() {
 
 
     // =====================================================
-    // EMPLOYEE REPORT
+    // OPEN REPORT DIALOG
     // =====================================================
 
-    const handleEmployeeReport = async () => {
+    const openReportDialog = (type) => {
 
-        const employeeId =
-            prompt(
-                "Enter Employee Database ID:"
-            );
+        setReportType(type);
 
-        if (!employeeId) {
-            return;
-        }
+        setEmployeeId("");
+        setProjectId("");
 
-        try {
+        setYear(
+            new Date().getFullYear()
+        );
 
-            const response =
-                await downloadEmployeeReport(
-                    employeeId
-                );
+        setMonth(
+            new Date().getMonth() + 1
+        );
 
-            downloadPdf(
-                response,
-                `Employee_${employeeId}.pdf`
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Failed to download employee report:",
-                error
-            );
-
-            alert(
-                "Failed to download employee report"
-            );
-
-        }
-
+        setDialogOpen(true);
     };
 
 
     // =====================================================
-    // PROJECT REPORT
+    // CLOSE DIALOG
     // =====================================================
 
-    const handleProjectReport = async () => {
+    const closeDialog = () => {
 
-        const projectId =
-            prompt(
-                "Enter Project Database ID:"
-            );
-
-        if (!projectId) {
+        if (generating) {
             return;
         }
 
-        try {
-
-            const response =
-                await downloadProjectReport(
-                    projectId
-                );
-
-            downloadPdf(
-                response,
-                `Project_${projectId}.pdf`
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Failed to download project report:",
-                error
-            );
-
-            alert(
-                "Failed to download project report"
-            );
-
-        }
-
+        setDialogOpen(false);
     };
 
 
     // =====================================================
-    // ATTENDANCE REPORT
+    // GENERATE REPORT
     // =====================================================
 
-    const handleAttendanceReport = async () => {
-
-        const employeeId =
-            prompt(
-                "Enter Employee Database ID:"
-            );
-
-        if (!employeeId) {
-            return;
-        }
-
-        const year =
-            prompt(
-                "Enter Year:",
-                new Date().getFullYear()
-            );
-
-        if (!year) {
-            return;
-        }
-
-        const month =
-            prompt(
-                "Enter Month (1-12):",
-                new Date().getMonth() + 1
-            );
-
-        if (!month) {
-            return;
-        }
+    const handleGenerateReport = async () => {
 
         try {
 
-            const response =
-                await downloadAttendanceReport(
-                    employeeId,
-                    year,
-                    month
-                );
+            setGenerating(true);
+
+            let response;
+            let filename;
+
+            // ---------------------------------------------
+            // EMPLOYEE
+            // ---------------------------------------------
+
+            if (reportType === "employee") {
+
+                if (!employeeId) {
+                    return;
+                }
+
+                response =
+                    await downloadEmployeeReport(
+                        employeeId
+                    );
+
+                filename =
+                    `Employee_${employeeId}.pdf`;
+            }
+
+
+            // ---------------------------------------------
+            // PROJECT
+            // ---------------------------------------------
+
+            if (reportType === "project") {
+
+                if (!projectId) {
+                    return;
+                }
+
+                response =
+                    await downloadProjectReport(
+                        projectId
+                    );
+
+                filename =
+                    `Project_${projectId}.pdf`;
+            }
+
+
+            // ---------------------------------------------
+            // ATTENDANCE
+            // ---------------------------------------------
+
+            if (reportType === "attendance") {
+
+                if (!employeeId) {
+                    return;
+                }
+
+                response =
+                    await downloadAttendanceReport(
+                        employeeId,
+                        year,
+                        month
+                    );
+
+                filename =
+                    `Attendance_${employeeId}_${year}_${month}.pdf`;
+            }
+
 
             downloadPdf(
                 response,
-                `Attendance_${employeeId}_${year}_${month}.pdf`
+                filename
             );
+
+            setDialogOpen(false);
 
         } catch (error) {
 
             console.error(
-                "Failed to download attendance report:",
+                "Failed to generate report:",
                 error
             );
 
-            alert(
-                "Failed to download attendance report"
-            );
+        } finally {
 
+            setGenerating(false);
         }
 
     };
@@ -268,45 +281,108 @@ function ReportsPage() {
 
             <Box
                 sx={{
+                    minHeight: "70vh",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    minHeight: "400px",
                 }}
             >
-
-                <CircularProgress />
-
+                <CircularProgress
+                    sx={{
+                        color: GOLD,
+                    }}
+                />
             </Box>
 
         );
-
     }
 
 
     return (
 
-        <Box sx={{ p: 3 }}>
+        <Box
+            sx={{
+                minHeight: "calc(100vh - 74px)",
+                background:
+                    "linear-gradient(135deg, #fffaf0 0%, #f8efd9 100%)",
+                p: {
+                    xs: 2,
+                    md: 3.5,
+                },
+            }}
+        >
 
             {/* ================================================= */}
             {/* HEADER */}
             {/* ================================================= */}
 
-            <Box sx={{ mb: 4 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: {
+                        xs: "flex-start",
+                        md: "center",
+                    },
+                    gap: 2,
+                    mb: 3,
+                    flexWrap: "wrap",
+                }}
+            >
 
-                <Typography
-                    variant="h4"
-                    fontWeight="600"
-                >
-                    Reports
-                </Typography>
+                <Box>
 
-                <Typography
-                    color="text.secondary"
-                >
-                    View management insights and generate reports
-                </Typography>
+                    <Typography
+                        sx={{
+                            fontFamily:
+                                '"Playfair Display", Georgia, serif',
+                            fontSize: {
+                                xs: "30px",
+                                md: "36px",
+                            },
+                            fontWeight: 700,
+                            color: BROWN,
+                            lineHeight: 1.2,
+                        }}
+                    >
+                        Reports
+                    </Typography>
 
+                    <Typography
+                        sx={{
+                            color: MUTED,
+                            fontSize: "14px",
+                            mt: 0.5,
+                        }}
+                    >
+                        Generate printable management reports
+                    </Typography>
+
+                </Box>
+
+
+                <Button
+                    startIcon={<RefreshIcon />}
+                    onClick={fetchSummary}
+                    sx={{
+                        minWidth: 48,
+                        width: 48,
+                        height: 44,
+                        borderRadius: "12px",
+                        color: BROWN,
+                        backgroundColor: "#fffdf8",
+                        border:
+                            `1px solid ${BORDER}`,
+                        boxShadow:
+                            "0 3px 10px rgba(59,40,35,0.06)",
+                        "&:hover": {
+                            backgroundColor: "#f7ecd5",
+                        },
+                        "& .MuiButton-startIcon": {
+                            margin: 0,
+                        },
+                    }}
+                />
             </Box>
 
 
@@ -316,11 +392,13 @@ function ReportsPage() {
 
             <Grid
                 container
-                spacing={3}
-                sx={{ mb: 4 }}
+                spacing={2}
+                sx={{
+                    mb: 3,
+                }}
             >
 
-                {/* Total Employees */}
+                {/* Employees */}
 
                 <Grid
                     item
@@ -329,26 +407,52 @@ function ReportsPage() {
                     md={3}
                 >
 
-                    <Card>
+                    <Card
+                        sx={{
+                            borderRadius: "16px",
+                            border:
+                                `1px solid ${BORDER}`,
+                            backgroundColor: "#fffdf8",
+                            boxShadow:
+                                "0 5px 16px rgba(59,40,35,0.07)",
+                            height: "100%",
+                        }}
+                    >
 
-                        <CardContent>
+                        <CardContent
+                            sx={{
+                                p: 2.5,
+                                "&:last-child": {
+                                    pb: 2.5,
+                                },
+                            }}
+                        >
 
                             <PeopleIcon
                                 sx={{
-                                    fontSize: 40,
+                                    color: GOLD_DARK,
+                                    fontSize: 30,
                                     mb: 1,
                                 }}
                             />
 
                             <Typography
-                                color="text.secondary"
+                                sx={{
+                                    color: MUTED,
+                                    fontSize: "13px",
+                                }}
                             >
                                 Total Employees
                             </Typography>
 
                             <Typography
-                                variant="h4"
-                                fontWeight="700"
+                                sx={{
+                                    fontFamily:
+                                        '"Playfair Display", Georgia, serif',
+                                    fontSize: "30px",
+                                    fontWeight: 700,
+                                    color: TEXT,
+                                }}
                             >
                                 {
                                     summary
@@ -373,26 +477,52 @@ function ReportsPage() {
                     md={3}
                 >
 
-                    <Card>
+                    <Card
+                        sx={{
+                            borderRadius: "16px",
+                            border:
+                                `1px solid ${BORDER}`,
+                            backgroundColor: "#fffdf8",
+                            boxShadow:
+                                "0 5px 16px rgba(59,40,35,0.07)",
+                            height: "100%",
+                        }}
+                    >
 
-                        <CardContent>
+                        <CardContent
+                            sx={{
+                                p: 2.5,
+                                "&:last-child": {
+                                    pb: 2.5,
+                                },
+                            }}
+                        >
 
                             <EngineeringIcon
                                 sx={{
-                                    fontSize: 40,
+                                    color: GOLD_DARK,
+                                    fontSize: 30,
                                     mb: 1,
                                 }}
                             />
 
                             <Typography
-                                color="text.secondary"
+                                sx={{
+                                    color: MUTED,
+                                    fontSize: "13px",
+                                }}
                             >
                                 Active Employees
                             </Typography>
 
                             <Typography
-                                variant="h4"
-                                fontWeight="700"
+                                sx={{
+                                    fontFamily:
+                                        '"Playfair Display", Georgia, serif',
+                                    fontSize: "30px",
+                                    fontWeight: 700,
+                                    color: TEXT,
+                                }}
                             >
                                 {
                                     summary
@@ -408,7 +538,7 @@ function ReportsPage() {
                 </Grid>
 
 
-                {/* Total Projects */}
+                {/* Projects */}
 
                 <Grid
                     item
@@ -417,26 +547,52 @@ function ReportsPage() {
                     md={3}
                 >
 
-                    <Card>
+                    <Card
+                        sx={{
+                            borderRadius: "16px",
+                            border:
+                                `1px solid ${BORDER}`,
+                            backgroundColor: "#fffdf8",
+                            boxShadow:
+                                "0 5px 16px rgba(59,40,35,0.07)",
+                            height: "100%",
+                        }}
+                    >
 
-                        <CardContent>
+                        <CardContent
+                            sx={{
+                                p: 2.5,
+                                "&:last-child": {
+                                    pb: 2.5,
+                                },
+                            }}
+                        >
 
                             <AssessmentIcon
                                 sx={{
-                                    fontSize: 40,
+                                    color: GOLD_DARK,
+                                    fontSize: 30,
                                     mb: 1,
                                 }}
                             />
 
                             <Typography
-                                color="text.secondary"
+                                sx={{
+                                    color: MUTED,
+                                    fontSize: "13px",
+                                }}
                             >
                                 Total Projects
                             </Typography>
 
                             <Typography
-                                variant="h4"
-                                fontWeight="700"
+                                sx={{
+                                    fontFamily:
+                                        '"Playfair Display", Georgia, serif',
+                                    fontSize: "30px",
+                                    fontWeight: 700,
+                                    color: TEXT,
+                                }}
                             >
                                 {
                                     summary
@@ -452,7 +608,7 @@ function ReportsPage() {
                 </Grid>
 
 
-                {/* Total Budget */}
+                {/* Budget */}
 
                 <Grid
                     item
@@ -461,26 +617,55 @@ function ReportsPage() {
                     md={3}
                 >
 
-                    <Card>
+                    <Card
+                        sx={{
+                            borderRadius: "16px",
+                            border:
+                                `1px solid ${BORDER}`,
+                            backgroundColor: "#fffdf8",
+                            boxShadow:
+                                "0 5px 16px rgba(59,40,35,0.07)",
+                            height: "100%",
+                        }}
+                    >
 
-                        <CardContent>
+                        <CardContent
+                            sx={{
+                                p: 2.5,
+                                "&:last-child": {
+                                    pb: 2.5,
+                                },
+                            }}
+                        >
 
                             <AccountBalanceIcon
                                 sx={{
-                                    fontSize: 40,
+                                    color: GOLD_DARK,
+                                    fontSize: 30,
                                     mb: 1,
                                 }}
                             />
 
                             <Typography
-                                color="text.secondary"
+                                sx={{
+                                    color: MUTED,
+                                    fontSize: "13px",
+                                }}
                             >
                                 Project Budget
                             </Typography>
 
                             <Typography
-                                variant="h5"
-                                fontWeight="700"
+                                sx={{
+                                    fontFamily:
+                                        '"Playfair Display", Georgia, serif',
+                                    fontSize: {
+                                        xs: "25px",
+                                        md: "27px",
+                                    },
+                                    fontWeight: 700,
+                                    color: TEXT,
+                                }}
                             >
                                 ₹
                                 {
@@ -504,20 +689,216 @@ function ReportsPage() {
 
 
             {/* ================================================= */}
+            {/* GENERATE REPORT */}
+            {/* ================================================= */}
+
+            <Card
+                sx={{
+                    borderRadius: "18px",
+                    border:
+                        `1px solid ${BORDER}`,
+                    backgroundColor: "#fffdf8",
+                    boxShadow:
+                        "0 6px 20px rgba(59,40,35,0.07)",
+                    mb: 3,
+                }}
+            >
+
+                <CardContent
+                    sx={{
+                        p: {
+                            xs: 2.5,
+                            md: 3,
+                        },
+                        "&:last-child": {
+                            pb: 3,
+                        },
+                    }}
+                >
+
+                    <Typography
+                        sx={{
+                            fontFamily:
+                                '"Playfair Display", Georgia, serif',
+                            fontSize: "22px",
+                            fontWeight: 700,
+                            color: BROWN,
+                            mb: 2.5,
+                        }}
+                    >
+                        Generate Report
+                    </Typography>
+
+
+                    <Grid
+                        container
+                        spacing={2}
+                        alignItems="center"
+                    >
+
+                        {/* Employee */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            md={4}
+                        >
+
+                            <Button
+                                fullWidth
+                                startIcon={
+                                    <PictureAsPdfIcon />
+                                }
+                                onClick={() =>
+                                    openReportDialog(
+                                        "employee"
+                                    )
+                                }
+                                sx={{
+                                    height: 52,
+                                    borderRadius: "11px",
+                                    background:
+                                        `linear-gradient(135deg, ${GOLD}, ${GOLD_DARK})`,
+                                    color: BROWN,
+                                    fontWeight: 800,
+                                    textTransform: "none",
+                                    boxShadow:
+                                        "0 5px 12px rgba(189,138,32,0.22)",
+                                    "&:hover": {
+                                        background:
+                                            `linear-gradient(135deg, ${GOLD_DARK}, #a97616)`,
+                                    },
+                                }}
+                            >
+                                Employee PDF Report
+                            </Button>
+
+                        </Grid>
+
+
+                        {/* Project */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            md={4}
+                        >
+
+                            <Button
+                                fullWidth
+                                startIcon={
+                                    <PictureAsPdfIcon />
+                                }
+                                onClick={() =>
+                                    openReportDialog(
+                                        "project"
+                                    )
+                                }
+                                sx={{
+                                    height: 52,
+                                    borderRadius: "11px",
+                                    background:
+                                        `linear-gradient(135deg, ${GOLD}, ${GOLD_DARK})`,
+                                    color: BROWN,
+                                    fontWeight: 800,
+                                    textTransform: "none",
+                                    boxShadow:
+                                        "0 5px 12px rgba(189,138,32,0.22)",
+                                    "&:hover": {
+                                        background:
+                                            `linear-gradient(135deg, ${GOLD_DARK}, #a97616)`,
+                                    },
+                                }}
+                            >
+                                Project PDF Report
+                            </Button>
+
+                        </Grid>
+
+
+                        {/* Attendance */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            md={4}
+                        >
+
+                            <Button
+                                fullWidth
+                                startIcon={
+                                    <PictureAsPdfIcon />
+                                }
+                                onClick={() =>
+                                    openReportDialog(
+                                        "attendance"
+                                    )
+                                }
+                                sx={{
+                                    height: 52,
+                                    borderRadius: "11px",
+                                    background:
+                                        `linear-gradient(135deg, ${GOLD}, ${GOLD_DARK})`,
+                                    color: BROWN,
+                                    fontWeight: 800,
+                                    textTransform: "none",
+                                    boxShadow:
+                                        "0 5px 12px rgba(189,138,32,0.22)",
+                                    "&:hover": {
+                                        background:
+                                            `linear-gradient(135deg, ${GOLD_DARK}, #a97616)`,
+                                    },
+                                }}
+                            >
+                                Attendance PDF Report
+                            </Button>
+
+                        </Grid>
+
+                    </Grid>
+
+                </CardContent>
+
+            </Card>
+
+
+            {/* ================================================= */}
             {/* PROJECT STATUS */}
             {/* ================================================= */}
 
-            <Card sx={{ mb: 4 }}>
+            <Card
+                sx={{
+                    borderRadius: "18px",
+                    border:
+                        `1px solid ${BORDER}`,
+                    backgroundColor: "#fffdf8",
+                    boxShadow:
+                        "0 6px 20px rgba(59,40,35,0.07)",
+                }}
+            >
 
-                <CardContent>
+                <CardContent
+                    sx={{
+                        p: 3,
+                        "&:last-child": {
+                            pb: 3,
+                        },
+                    }}
+                >
 
                     <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{ mb: 2 }}
+                        sx={{
+                            fontFamily:
+                                '"Playfair Display", Georgia, serif',
+                            fontSize: "22px",
+                            fontWeight: 700,
+                            color: BROWN,
+                            mb: 2.5,
+                        }}
                     >
                         Project Status
                     </Typography>
+
 
                     <Grid
                         container
@@ -530,20 +911,43 @@ function ReportsPage() {
                             md={4}
                         >
 
-                            <Typography>
-                                Planned
-                            </Typography>
-
-                            <Typography
-                                variant="h5"
-                                fontWeight="700"
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: "12px",
+                                    backgroundColor:
+                                        "#faf4e7",
+                                    border:
+                                        `1px solid ${BORDER}`,
+                                }}
                             >
-                                {
-                                    summary
-                                        ?.projects
-                                        ?.planned ?? 0
-                                }
-                            </Typography>
+
+                                <Typography
+                                    sx={{
+                                        color: MUTED,
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    Planned
+                                </Typography>
+
+                                <Typography
+                                    sx={{
+                                        fontFamily:
+                                            '"Playfair Display", Georgia, serif',
+                                        fontSize: "28px",
+                                        fontWeight: 700,
+                                        color: TEXT,
+                                    }}
+                                >
+                                    {
+                                        summary
+                                            ?.projects
+                                            ?.planned ?? 0
+                                    }
+                                </Typography>
+
+                            </Box>
 
                         </Grid>
 
@@ -554,20 +958,43 @@ function ReportsPage() {
                             md={4}
                         >
 
-                            <Typography>
-                                In Progress
-                            </Typography>
-
-                            <Typography
-                                variant="h5"
-                                fontWeight="700"
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: "12px",
+                                    backgroundColor:
+                                        "#faf4e7",
+                                    border:
+                                        `1px solid ${BORDER}`,
+                                }}
                             >
-                                {
-                                    summary
-                                        ?.projects
-                                        ?.in_progress ?? 0
-                                }
-                            </Typography>
+
+                                <Typography
+                                    sx={{
+                                        color: MUTED,
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    In Progress
+                                </Typography>
+
+                                <Typography
+                                    sx={{
+                                        fontFamily:
+                                            '"Playfair Display", Georgia, serif',
+                                        fontSize: "28px",
+                                        fontWeight: 700,
+                                        color: TEXT,
+                                    }}
+                                >
+                                    {
+                                        summary
+                                            ?.projects
+                                            ?.in_progress ?? 0
+                                    }
+                                </Typography>
+
+                            </Box>
 
                         </Grid>
 
@@ -578,20 +1005,43 @@ function ReportsPage() {
                             md={4}
                         >
 
-                            <Typography>
-                                Completed
-                            </Typography>
-
-                            <Typography
-                                variant="h5"
-                                fontWeight="700"
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: "12px",
+                                    backgroundColor:
+                                        "#faf4e7",
+                                    border:
+                                        `1px solid ${BORDER}`,
+                                }}
                             >
-                                {
-                                    summary
-                                        ?.projects
-                                        ?.completed ?? 0
-                                }
-                            </Typography>
+
+                                <Typography
+                                    sx={{
+                                        color: MUTED,
+                                        fontSize: "13px",
+                                    }}
+                                >
+                                    Completed
+                                </Typography>
+
+                                <Typography
+                                    sx={{
+                                        fontFamily:
+                                            '"Playfair Display", Georgia, serif',
+                                        fontSize: "28px",
+                                        fontWeight: 700,
+                                        color: TEXT,
+                                    }}
+                                >
+                                    {
+                                        summary
+                                            ?.projects
+                                            ?.completed ?? 0
+                                    }
+                                </Typography>
+
+                            </Box>
 
                         </Grid>
 
@@ -603,170 +1053,303 @@ function ReportsPage() {
 
 
             {/* ================================================= */}
-            {/* PDF REPORTS */}
+            {/* REPORT DIALOG */}
             {/* ================================================= */}
 
-            <Typography
-                variant="h6"
-                fontWeight="600"
-                sx={{ mb: 2 }}
+            <Dialog
+                open={dialogOpen}
+                onClose={closeDialog}
+                fullWidth
+                maxWidth="sm"
+                PaperProps={{
+                    sx: {
+                        borderRadius: "20px",
+                        backgroundColor: "#fffdf8",
+                        border:
+                            `1px solid ${BORDER}`,
+                        boxShadow:
+                            "0 20px 60px rgba(45,33,29,0.25)",
+                    },
+                }}
             >
-                PDF Reports
-            </Typography>
+
+                <DialogTitle
+                    sx={{
+                        fontFamily:
+                            '"Playfair Display", Georgia, serif',
+                        fontSize: "25px",
+                        fontWeight: 700,
+                        color: BROWN,
+                        pb: 1,
+                    }}
+                >
+                    {reportType === "employee" &&
+                        "Generate Employee Report"}
+
+                    {reportType === "project" &&
+                        "Generate Project Report"}
+
+                    {reportType === "attendance" &&
+                        "Generate Attendance Report"}
+                </DialogTitle>
 
 
-            <Grid
-                container
-                spacing={3}
-            >
-
-                {/* Employee Report */}
-
-                <Grid
-                    item
-                    xs={12}
-                    md={4}
+                <DialogContent
+                    sx={{
+                        pt: "12px !important",
+                    }}
                 >
 
-                    <Card>
+                    {/* Employee */}
 
-                        <CardContent>
+                    {(
+                        reportType === "employee" ||
+                        reportType === "attendance"
+                    ) && (
 
-                            <Typography
-                                variant="h6"
-                                fontWeight="600"
+                        <TextField
+                            fullWidth
+                            label="Employee Database ID"
+                            value={employeeId}
+                            onChange={(e) =>
+                                setEmployeeId(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Enter employee ID"
+                            sx={{
+                                mt: 1,
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: "11px",
+                                },
+                                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                    {
+                                        borderColor: GOLD,
+                                    },
+                                "& .MuiInputLabel-root.Mui-focused":
+                                    {
+                                        color: GOLD_DARK,
+                                    },
+                            }}
+                        />
+
+                    )}
+
+
+                    {/* Project */}
+
+                    {reportType === "project" && (
+
+                        <TextField
+                            fullWidth
+                            label="Project Database ID"
+                            value={projectId}
+                            onChange={(e) =>
+                                setProjectId(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Enter project ID"
+                            sx={{
+                                mt: 1,
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: "11px",
+                                },
+                                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                    {
+                                        borderColor: GOLD,
+                                    },
+                                "& .MuiInputLabel-root.Mui-focused":
+                                    {
+                                        color: GOLD_DARK,
+                                    },
+                            }}
+                        />
+
+                    )}
+
+
+                    {/* Attendance */}
+
+                    {reportType === "attendance" && (
+
+                        <Grid
+                            container
+                            spacing={2}
+                            sx={{ mt: 0.5 }}
+                        >
+
+                            <Grid
+                                item
+                                xs={6}
                             >
-                                Employee Report
-                            </Typography>
 
-                            <Typography
-                                color="text.secondary"
-                                sx={{
-                                    mb: 2,
-                                    mt: 1,
-                                }}
+                                <FormControl
+                                    fullWidth
+                                >
+
+                                    <InputLabel>
+                                        Year
+                                    </InputLabel>
+
+                                    <Select
+                                        value={year}
+                                        label="Year"
+                                        onChange={(e) =>
+                                            setYear(
+                                                e.target.value
+                                            )
+                                        }
+                                        sx={{
+                                            borderRadius: "11px",
+                                        }}
+                                    >
+
+                                        {Array.from(
+                                            {
+                                                length: 6,
+                                            },
+                                            (_, index) =>
+                                                new Date()
+                                                    .getFullYear() -
+                                                index
+                                        ).map(
+                                            (item) => (
+
+                                                <MenuItem
+                                                    key={item}
+                                                    value={item}
+                                                >
+                                                    {item}
+                                                </MenuItem>
+
+                                            )
+                                        )}
+
+                                    </Select>
+
+                                </FormControl>
+
+                            </Grid>
+
+
+                            <Grid
+                                item
+                                xs={6}
                             >
-                                Generate a detailed employee PDF report.
-                            </Typography>
 
-                            <Button
-                                variant="contained"
-                                startIcon={
-                                    <PictureAsPdfIcon />
-                                }
-                                fullWidth
-                                onClick={
-                                    handleEmployeeReport
-                                }
-                            >
-                                Download Report
-                            </Button>
+                                <FormControl
+                                    fullWidth
+                                >
 
-                        </CardContent>
+                                    <InputLabel>
+                                        Month
+                                    </InputLabel>
 
-                    </Card>
+                                    <Select
+                                        value={month}
+                                        label="Month"
+                                        onChange={(e) =>
+                                            setMonth(
+                                                e.target.value
+                                            )
+                                        }
+                                        sx={{
+                                            borderRadius: "11px",
+                                        }}
+                                    >
 
-                </Grid>
+                                        {Array.from(
+                                            {
+                                                length: 12,
+                                            },
+                                            (_, index) => (
+                                                <MenuItem
+                                                    key={index + 1}
+                                                    value={index + 1}
+                                                >
+                                                    {index + 1}
+                                                </MenuItem>
+                                            )
+                                        )}
+
+                                    </Select>
+
+                                </FormControl>
+
+                            </Grid>
+
+                        </Grid>
+
+                    )}
+
+                </DialogContent>
 
 
-                {/* Project Report */}
-
-                <Grid
-                    item
-                    xs={12}
-                    md={4}
+                <DialogActions
+                    sx={{
+                        p: 2.5,
+                        pt: 1,
+                        gap: 1,
+                    }}
                 >
 
-                    <Card>
+                    <Button
+                        onClick={closeDialog}
+                        disabled={generating}
+                        sx={{
+                            color: MUTED,
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            fontWeight: 700,
+                        }}
+                    >
+                        Cancel
+                    </Button>
 
-                        <CardContent>
 
-                            <Typography
-                                variant="h6"
-                                fontWeight="600"
-                            >
-                                Project Report
-                            </Typography>
-
-                            <Typography
-                                color="text.secondary"
-                                sx={{
-                                    mb: 2,
-                                    mt: 1,
-                                }}
-                            >
-                                Generate a detailed project PDF report.
-                            </Typography>
-
-                            <Button
-                                variant="contained"
-                                startIcon={
+                    <Button
+                        onClick={
+                            handleGenerateReport
+                        }
+                        disabled={generating}
+                        startIcon={
+                            generating
+                                ? (
+                                    <CircularProgress
+                                        size={18}
+                                        sx={{
+                                            color: BROWN,
+                                        }}
+                                    />
+                                )
+                                : (
                                     <PictureAsPdfIcon />
-                                }
-                                fullWidth
-                                onClick={
-                                    handleProjectReport
-                                }
-                            >
-                                Download Report
-                            </Button>
+                                )
+                        }
+                        sx={{
+                            px: 3,
+                            height: 44,
+                            borderRadius: "10px",
+                            background:
+                                `linear-gradient(135deg, ${GOLD}, ${GOLD_DARK})`,
+                            color: BROWN,
+                            fontWeight: 800,
+                            textTransform: "none",
+                            "&:hover": {
+                                background:
+                                    `linear-gradient(135deg, ${GOLD_DARK}, #a97616)`,
+                            },
+                        }}
+                    >
+                        {generating
+                            ? "Generating..."
+                            : "Generate PDF Report"}
+                    </Button>
 
-                        </CardContent>
+                </DialogActions>
 
-                    </Card>
-
-                </Grid>
-
-
-                {/* Attendance Report */}
-
-                <Grid
-                    item
-                    xs={12}
-                    md={4}
-                >
-
-                    <Card>
-
-                        <CardContent>
-
-                            <Typography
-                                variant="h6"
-                                fontWeight="600"
-                            >
-                                Attendance Report
-                            </Typography>
-
-                            <Typography
-                                color="text.secondary"
-                                sx={{
-                                    mb: 2,
-                                    mt: 1,
-                                }}
-                            >
-                                Generate monthly attendance PDF.
-                            </Typography>
-
-                            <Button
-                                variant="contained"
-                                startIcon={
-                                    <PictureAsPdfIcon />
-                                }
-                                fullWidth
-                                onClick={
-                                    handleAttendanceReport
-                                }
-                            >
-                                Download Report
-                            </Button>
-
-                        </CardContent>
-
-                    </Card>
-
-                </Grid>
-
-            </Grid>
+            </Dialog>
 
         </Box>
     );
