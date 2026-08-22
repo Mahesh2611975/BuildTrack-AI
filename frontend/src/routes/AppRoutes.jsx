@@ -22,6 +22,7 @@ import EquipmentAssignmentPage
     from "../pages/Equipment/EquipmentAssignmentPage";
 import ExpensesPage from "../pages/Expenses/ExpensesPage";
 import AdvancePage from "../pages/Advance/AdvancePage";
+import TasksPage from "../pages/Tasks/TasksPage";
 
 function AppRoutes() {
 
@@ -73,7 +74,10 @@ function AppRoutes() {
                         element={<ProjectPage />}
                     />
 
-
+                    <Route
+                        path="tasks"
+                        element={<TasksPage />}
+                    />
                     {/* Contractors */}
 
                     <Route
