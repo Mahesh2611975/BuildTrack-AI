@@ -23,6 +23,8 @@ import EquipmentAssignmentPage
 import ExpensesPage from "../pages/Expenses/ExpensesPage";
 import AdvancePage from "../pages/Advance/AdvancePage";
 import TasksPage from "../pages/Tasks/TasksPage";
+import SupplierPage from "../pages/Suppliers/SupplierPage";
+import SalaryPage from "../pages/Salary/SalaryPage";
 
 function AppRoutes() {
 
@@ -99,6 +101,14 @@ function AppRoutes() {
                     <Route
                         path="materials"
                         element={<MaterialPage />}
+                    />
+                    <Route
+                        path="suppliers"
+                        element={<SupplierPage />}
+                    />
+                    <Route
+                        path="salary"
+                        element={<SalaryPage />}
                     />
                     <Route
                         path="expenses"
