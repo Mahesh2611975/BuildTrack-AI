@@ -1,56 +1,80 @@
 import api from "./api";
 
 // ==========================================================
-// GET ALL ADVANCES
+// MAIN ADVANCES
 // ==========================================================
 
+// Get all advances
 export const getAdvances = () => {
     return api.get("/advances/");
 };
 
-// ==========================================================
-// GET ADVANCE BY ID
-// ==========================================================
-
-export const getAdvanceById = (id) => {
-    return api.get(`/advances/${id}`);
+// Get advance by ID
+export const getAdvanceById = (advanceId) => {
+    return api.get(`/advances/${advanceId}`);
 };
 
-// ==========================================================
-// GET ADVANCES BY EMPLOYEE
-// ==========================================================
-
+// Get advances by employee
 export const getAdvancesByEmployee = (employeeId) => {
-    return api.get(
-        `/advances/employee/${employeeId}`
-    );
+    return api.get(`/advances/employee/${employeeId}`);
 };
 
-// ==========================================================
-// CREATE ADVANCE
-// ==========================================================
-
+// Create advance
 export const createAdvance = (data) => {
     return api.post("/advances/", data);
 };
 
+// Update advance
+export const updateAdvance = (advanceId, data) => {
+    return api.put(`/advances/${advanceId}`, data);
+};
+
+// Delete advance
+export const deleteAdvance = (advanceId) => {
+    return api.delete(`/advances/${advanceId}`);
+};
+
+
 // ==========================================================
-// UPDATE ADVANCE
+// DAILY ADVANCE TRANSACTIONS
 // ==========================================================
 
-export const updateAdvance = (id, data) => {
-    return api.put(
-        `/advances/${id}`,
+// Get all daily transactions
+export const getAdvanceTransactions = () => {
+    return api.get("/advance-transactions/");
+};
+
+// Get transactions by employee
+export const getAdvanceTransactionsByEmployee = (
+    employeeId
+) => {
+    return api.get(
+        `/advance-transactions/employee/${employeeId}`
+    );
+};
+
+// Get transactions by main advance
+export const getAdvanceTransactionsByAdvance = (
+    advanceId
+) => {
+    return api.get(
+        `/advance-transactions/advance/${advanceId}`
+    );
+};
+
+// Create daily advance transaction
+export const createAdvanceTransaction = (data) => {
+    return api.post(
+        "/advance-transactions/",
         data
     );
 };
 
-// ==========================================================
-// DELETE ADVANCE
-// ==========================================================
-
-export const deleteAdvance = (id) => {
+// Delete daily advance transaction
+export const deleteAdvanceTransaction = (
+    transactionId
+) => {
     return api.delete(
-        `/advances/${id}`
+        `/advance-transactions/${transactionId}`
     );
 };

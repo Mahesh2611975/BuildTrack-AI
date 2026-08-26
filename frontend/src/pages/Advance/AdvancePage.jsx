@@ -1,5 +1,12 @@
 import { useState } from "react";
 
+import {
+    Box,
+    Button,
+} from "@mui/material";
+
+import AddIcon from "@mui/icons-material/Add";
+
 import PageHeader from "../../components/common/PageHeader";
 import SearchBar from "../../components/common/SearchBar";
 
@@ -247,6 +254,7 @@ function AdvancePage() {
 
 
         if (!confirmDelete) {
+
             return;
         }
 
@@ -309,6 +317,7 @@ function AdvancePage() {
     // ==========================================================
 
     return (
+
         <>
 
             {/* ==================================================
@@ -329,33 +338,49 @@ function AdvancePage() {
                 DAILY ADVANCE BUTTON
             ================================================== */}
 
-            <div
-                style={{
+            <Box
+                sx={{
                     display: "flex",
                     justifyContent: "flex-end",
-                    marginBottom: "16px",
+                    mb: 2,
                 }}
             >
 
-                <button
-                    type="button"
+                <Button
+                    variant="contained"
+                    startIcon={
+                        <AddIcon />
+                    }
                     onClick={
                         handleOpenDailyAdvance
                     }
-                    style={{
-                        padding: "10px 18px",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        fontWeight: 600,
+                    sx={{
+                        background:
+                            "linear-gradient(135deg, #dca62f, #c89425)",
+
+                        color: "#2d211d",
+
+                        fontWeight: 700,
+
+                        px: 2.5,
+
+                        py: 1.2,
+
+                        borderRadius: 2,
+
+                        boxShadow:
+                            "0 4px 12px rgba(180,130,20,0.20)",
+
+                        "&:hover": {
+                            background:
+                                "linear-gradient(135deg, #c89425, #b58218)",
+                        },
                     }}
                 >
+                    Daily Advance
+                </Button>
 
-                    + Daily Advance
-
-                </button>
-
-            </div>
+            </Box>
 
 
             {/* ==================================================

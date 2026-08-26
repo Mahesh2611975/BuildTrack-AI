@@ -25,6 +25,7 @@ import AdvancePage from "../pages/Advance/AdvancePage";
 import TasksPage from "../pages/Tasks/TasksPage";
 import SupplierPage from "../pages/Suppliers/SupplierPage";
 import SalaryPage from "../pages/Salary/SalaryPage";
+import PayrollHistory from "./pages/payroll/PayrollHistory";
 
 function AppRoutes() {
 
@@ -129,6 +130,10 @@ function AppRoutes() {
                     <Route
                         path="payroll"
                         element={<PayrollPage />}
+                    />
+                    <Route
+                        path="/payroll-history"
+                        element={<PayrollHistory />}
                     />
                     <Route
                         path="reports"

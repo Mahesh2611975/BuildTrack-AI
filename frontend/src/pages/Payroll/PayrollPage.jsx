@@ -5,6 +5,8 @@ import {
     Button,
     Card,
     CardContent,
+    CircularProgress,
+    Divider,
     FormControl,
     Grid,
     InputLabel,
@@ -15,71 +17,288 @@ import {
 
 import CalculateIcon from "@mui/icons-material/Calculate";
 import DownloadIcon from "@mui/icons-material/Download";
+import SaveIcon from "@mui/icons-material/Save";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 import api from "../../services/api";
-import { getPayroll } from "../../services/payrollService";
-import SaveIcon from "@mui/icons-material/Save";
+
+import {
+    getPayroll,
+    savePayroll,
+    downloadPayslip,
+} from "../../services/payrollService";
+
+
+// ============================================================
+// COLORS
+// ============================================================
+
+const COLORS = {
+    bg: "#f8f0df",
+    brown: "#3b2823",
+    muted: "#8a7568",
+    gold: "#dda625",
+    goldDark: "#bd8616",
+    border: "#eadfca",
+    soft: "#fff7e7",
+    green: "#2e7d32",
+    red: "#c62828",
+};
+
+
+// ============================================================
+// MONEY FORMAT
+// ============================================================
+
+const money = (value) =>
+    `₹${Number(value || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    })}`;
+
+
+// ============================================================
+// MONTH NAME
+// ============================================================
+
+const monthName = (month) =>
+    new Date(
+        2000,
+        Number(month) - 1,
+        1
+    ).toLocaleString("en-IN", {
+        month: "long",
+    });
+
+
+// ============================================================
+// DETAIL ROW
+// ============================================================
+
+function DetailRow({
+    label,
+    value,
+    strong = false,
+}) {
+
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 2,
+                py: 0.75,
+            }}
+        >
+
+            <Typography
+                sx={{
+                    color: COLORS.muted,
+                    fontSize: 14,
+                }}
+            >
+                {label}
+            </Typography>
+
+            <Typography
+                sx={{
+                    color: COLORS.brown,
+                    fontSize: 14,
+                    fontWeight: strong ? 800 : 500,
+                    textAlign: "right",
+                }}
+            >
+                {value}
+            </Typography>
+
+        </Box>
+    );
+}
+
+
+// ============================================================
+// INFO BOX
+// ============================================================
+
+function InfoBox({
+    label,
+    value,
+}) {
+
+    return (
+        <Box
+            sx={{
+                p: 1.5,
+                borderRadius: 2,
+                background: "#fffaf0",
+                border: `1px solid ${COLORS.border}`,
+            }}
+        >
+
+            <Typography
+                sx={{
+                    fontSize: 12,
+                    color: COLORS.muted,
+                }}
+            >
+                {label}
+            </Typography>
+
+            <Typography
+                sx={{
+                    mt: 0.4,
+                    fontWeight: 700,
+                    color: COLORS.brown,
+                }}
+            >
+                {value}
+            </Typography>
+
+        </Box>
+    );
+}
+
+
+// ============================================================
+// SECTION CARD
+// ============================================================
+
+function SectionCard({
+    title,
+    children,
+}) {
+
+    return (
+        <Card
+            sx={{
+                height: "100%",
+                borderRadius: 3,
+                border: `1px solid ${COLORS.border}`,
+                boxShadow:
+                    "0 5px 18px rgba(60,40,20,0.06)",
+            }}
+        >
+
+            <CardContent
+                sx={{
+                    p: {
+                        xs: 2.5,
+                        md: 3,
+                    },
+                }}
+            >
+
+                <Typography
+                    sx={{
+                        fontSize: 20,
+                        fontWeight: 700,
+                        color: COLORS.brown,
+                        mb: 2,
+                    }}
+                >
+                    {title}
+                </Typography>
+
+                {children}
+
+            </CardContent>
+
+        </Card>
+    );
+}
+
+
+// ============================================================
+// PAYROLL PAGE
+// ============================================================
 
 function PayrollPage() {
 
-    const [employees, setEmployees] = useState([]);
+    const [employees, setEmployees] =
+        useState([]);
 
-    const [employeeId, setEmployeeId] = useState("");
+    const [employeeId, setEmployeeId] =
+        useState("");
 
-    const [year, setYear] = useState(
-        new Date().getFullYear()
-    );
+    const [year, setYear] =
+        useState(
+            new Date().getFullYear()
+        );
 
-    const [month, setMonth] = useState(
-        new Date().getMonth() + 1
-    );
+    const [month, setMonth] =
+        useState(
+            new Date().getMonth() + 1
+        );
 
-    const [payroll, setPayroll] = useState(null);
+    const [payroll, setPayroll] =
+        useState(null);
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] =
+        useState(false);
 
-    const [downloading, setDownloading] = useState(false);
+    const [downloading, setDownloading] =
+        useState(false);
+
+    const [employeesLoading, setEmployeesLoading] =
+        useState(true);
 
 
-    // =====================================================
+    // ============================================================
     // LOAD EMPLOYEES
-    // =====================================================
+    // ============================================================
+
+    const loadEmployees = async () => {
+
+        try {
+
+            setEmployeesLoading(true);
+
+            const response =
+                await api.get("/employees");
+
+            setEmployees(
+                Array.isArray(response.data)
+                    ? response.data
+                    : []
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Failed to load employees:",
+                error
+            );
+
+            alert(
+                error.response?.data?.detail ||
+                "Failed to load employees"
+            );
+
+        } finally {
+
+            setEmployeesLoading(false);
+
+        }
+    };
+
+
+    // ============================================================
+    // INITIAL LOAD
+    // ============================================================
 
     useEffect(() => {
 
-        const fetchEmployees = async () => {
-
-            try {
-
-                const response = await api.get(
-                    "/employees"
-                );
-
-                setEmployees(
-                    Array.isArray(response.data)
-                        ? response.data
-                        : []
-                );
-
-            } catch (error) {
-
-                console.error(
-                    "Failed to load employees:",
-                    error
-                );
-
-            }
-
-        };
-
-        fetchEmployees();
+        loadEmployees();
 
     }, []);
 
 
-    // =====================================================
+    // ============================================================
     // GENERATE PAYROLL
-    // =====================================================
+    // ============================================================
 
     const handleGeneratePayroll = async () => {
 
@@ -96,11 +315,12 @@ function PayrollPage() {
 
             setLoading(true);
 
-            const response = await getPayroll(
-                employeeId,
-                year,
-                month
-            );
+            const response =
+                await getPayroll(
+                    employeeId,
+                    year,
+                    month
+                );
 
             setPayroll(
                 response.data
@@ -126,18 +346,33 @@ function PayrollPage() {
 
         }
     };
+
+
+    // ============================================================
+    // SAVE PAYROLL
+    // ============================================================
+
     const handleSavePayroll = async () => {
+
         if (!payroll) {
-            alert("Please generate payroll first");
+
+            alert(
+                "Please generate payroll first"
+            );
+
             return;
         }
 
         try {
+
             setLoading(true);
 
-            const response = await api.post(
-                `/payroll/save?employee_id=${employeeId}&year=${year}&month=${month}`
-            );
+            const response =
+                await savePayroll(
+                    employeeId,
+                    year,
+                    month
+                );
 
             alert(
                 response.data?.message ||
@@ -157,24 +392,18 @@ function PayrollPage() {
             );
 
         } finally {
+
             setLoading(false);
+
         }
     };
 
-    // =====================================================
+
+    // ============================================================
     // DOWNLOAD PAYSLIP
-    // =====================================================
+    // ============================================================
 
     const handleDownloadPayslip = async () => {
-
-        if (!employeeId) {
-
-            alert(
-                "Please select an employee"
-            );
-
-            return;
-        }
 
         if (!payroll) {
 
@@ -189,22 +418,25 @@ function PayrollPage() {
 
             setDownloading(true);
 
-            const response = await api.get(
-                `/payroll/${employeeId}/${year}/${month}/payslip`,
-                {
-                    responseType: "blob",
-                }
-            );
+            const response =
+                await downloadPayslip(
+                    employeeId,
+                    year,
+                    month
+                );
 
-            const blob = new Blob(
-                [response.data],
-                {
-                    type: "application/pdf",
-                }
-            );
+            const blob =
+                new Blob(
+                    [response.data],
+                    {
+                        type: "application/pdf",
+                    }
+                );
 
             const url =
-                window.URL.createObjectURL(blob);
+                window.URL.createObjectURL(
+                    blob
+                );
 
             const link =
                 document.createElement("a");
@@ -214,13 +446,19 @@ function PayrollPage() {
             link.download =
                 `payslip_${payroll.employee_id}_${year}_${month}.pdf`;
 
-            document.body.appendChild(link);
+            document.body.appendChild(
+                link
+            );
 
             link.click();
 
-            document.body.removeChild(link);
+            document.body.removeChild(
+                link
+            );
 
-            window.URL.revokeObjectURL(url);
+            window.URL.revokeObjectURL(
+                url
+            );
 
         } catch (error) {
 
@@ -241,81 +479,266 @@ function PayrollPage() {
     };
 
 
-    // =====================================================
-    // PAGE
-    // =====================================================
+    // ============================================================
+    // REFRESH
+    // ============================================================
+
+    const handleRefresh = async () => {
+
+        setPayroll(null);
+
+        await loadEmployees();
+
+    };
+
+
+    // ============================================================
+    // UI
+    // ============================================================
 
     return (
 
-        <Box sx={{ p: 3 }}>
+        <Box
+            sx={{
+                minHeight: "100%",
+                background: COLORS.bg,
+                p: {
+                    xs: 2,
+                    md: 4,
+                },
+            }}
+        >
 
-            {/* ================================================= */}
-            {/* HEADER */}
-            {/* ================================================= */}
+            {/* ==================================================
+                HEADER
+            ================================================== */}
 
             <Box
                 sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
+                    alignItems: {
+                        xs: "flex-start",
+                        md: "center",
+                    },
+                    flexDirection: {
+                        xs: "column",
+                        md: "row",
+                    },
+                    gap: 2,
+                    mb: 4,
                 }}
             >
 
                 <Box>
 
                     <Typography
-                        variant="h4"
-                        fontWeight="600"
+                        sx={{
+                            fontSize: {
+                                xs: 34,
+                                md: 42,
+                            },
+                            lineHeight: 1.1,
+                            fontWeight: 700,
+                            fontFamily:
+                                "Playfair Display, Georgia, serif",
+                            color: COLORS.brown,
+                        }}
                     >
                         Payroll
                     </Typography>
 
                     <Typography
-                        color="text.secondary"
+                        sx={{
+                            color: COLORS.muted,
+                            mt: 0.8,
+                        }}
                     >
                         Generate and manage employee payroll
                     </Typography>
 
                 </Box>
 
+
+                <Box
+                    sx={{
+                        display: "flex",
+                        gap: 1.5,
+                        flexWrap: "wrap",
+                    }}
+                >
+
+                    <Button
+                        variant="outlined"
+                        startIcon={
+                            <RefreshIcon />
+                        }
+                        onClick={
+                            handleRefresh
+                        }
+                        disabled={
+                            employeesLoading ||
+                            loading
+                        }
+                        sx={{
+                            minHeight: 46,
+                            px: 2.5,
+                            borderRadius: 2.5,
+                            borderColor:
+                                COLORS.goldDark,
+                            color:
+                                COLORS.brown,
+                            fontWeight: 700,
+                            textTransform:
+                                "none",
+                        }}
+                    >
+                        Refresh
+                    </Button>
+
+
+                    <Button
+                        variant="contained"
+                        startIcon={
+                            <PaymentsIcon />
+                        }
+                        onClick={() =>
+                            document
+                                .getElementById(
+                                    "payroll-generator"
+                                )
+                                ?.scrollIntoView({
+                                    behavior:
+                                        "smooth",
+                                })
+                        }
+                        sx={{
+                            minHeight: 46,
+                            px: 2.8,
+                            borderRadius: 2.5,
+                            background:
+                                "linear-gradient(135deg, #dda625, #c89425)",
+                            color:
+                                COLORS.brown,
+                            fontWeight: 800,
+                            textTransform:
+                                "none",
+                            boxShadow:
+                                "0 5px 14px rgba(160,110,20,0.18)",
+                            "&:hover": {
+                                background:
+                                    "linear-gradient(135deg, #c89425, #b58218)",
+                            },
+                        }}
+                    >
+                        Generate Payroll
+                    </Button>
+
+                </Box>
+
             </Box>
 
 
-            {/* ================================================= */}
-            {/* PAYROLL FILTER */}
-            {/* ================================================= */}
+            {/* ==================================================
+                PAYROLL GENERATOR
+            ================================================== */}
 
-            <Card sx={{ mb: 3 }}>
+            <Card
+                id="payroll-generator"
+                sx={{
+                    mb: 3,
+                    borderRadius: 3,
+                    border:
+                        `1px solid ${COLORS.border}`,
+                    boxShadow:
+                        "0 5px 18px rgba(60,40,20,0.06)",
+                }}
+            >
 
-                <CardContent>
+                <CardContent
+                    sx={{
+                        p: {
+                            xs: 2.5,
+                            md: 3,
+                        },
+                    }}
+                >
 
-                    <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{ mb: 2 }}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.2,
+                            mb: 2.5,
+                        }}
                     >
-                        Generate Payroll
-                    </Typography>
+
+                        <Box
+                            sx={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: 2,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent:
+                                    "center",
+                                background:
+                                    COLORS.soft,
+                                color:
+                                    COLORS.goldDark,
+                            }}
+                        >
+                            <CalculateIcon />
+                        </Box>
+
+                        <Box>
+
+                            <Typography
+                                sx={{
+                                    fontSize: 21,
+                                    fontWeight: 700,
+                                    color:
+                                        COLORS.brown,
+                                }}
+                            >
+                                Generate Payroll
+                            </Typography>
+
+                            <Typography
+                                sx={{
+                                    fontSize: 13,
+                                    color:
+                                        COLORS.muted,
+                                }}
+                            >
+                                Select employee and payroll period
+                            </Typography>
+
+                        </Box>
+
+                    </Box>
 
 
                     <Grid
                         container
                         spacing={2}
+                        alignItems="center"
                     >
 
-                        {/* ================================================= */}
                         {/* EMPLOYEE */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={4}
+                            md={5}
                         >
 
                             <FormControl
                                 fullWidth
+                                disabled={
+                                    employeesLoading ||
+                                    loading
+                                }
                             >
 
                                 <InputLabel>
@@ -323,7 +746,9 @@ function PayrollPage() {
                                 </InputLabel>
 
                                 <Select
-                                    value={employeeId}
+                                    value={
+                                        employeeId
+                                    }
                                     label="Employee"
                                     onChange={(e) => {
 
@@ -331,9 +756,21 @@ function PayrollPage() {
                                             e.target.value
                                         );
 
-                                        setPayroll(null);
+                                        setPayroll(
+                                            null
+                                        );
+
+                                    }}
+                                    sx={{
+                                        borderRadius: 2,
+                                        background:
+                                            "#fffdfa",
                                     }}
                                 >
+
+                                    <MenuItem value="">
+                                        Select Employee
+                                    </MenuItem>
 
                                     {employees.map(
                                         (employee) => (
@@ -346,17 +783,13 @@ function PayrollPage() {
                                                     employee.id
                                                 }
                                             >
-
                                                 {
                                                     employee.employee_id
                                                 }
-
                                                 {" - "}
-
                                                 {
                                                     employee.full_name
                                                 }
-
                                             </MenuItem>
 
                                         )
@@ -369,18 +802,18 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* ================================================= */}
                         {/* YEAR */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={3}
+                            sm={6}
+                            md={2}
                         >
 
                             <FormControl
                                 fullWidth
+                                disabled={loading}
                             >
 
                                 <InputLabel>
@@ -393,24 +826,40 @@ function PayrollPage() {
                                     onChange={(e) => {
 
                                         setYear(
-                                            e.target.value
+                                            Number(
+                                                e.target.value
+                                            )
                                         );
 
-                                        setPayroll(null);
+                                        setPayroll(
+                                            null
+                                        );
+
+                                    }}
+                                    sx={{
+                                        borderRadius: 2,
+                                        background:
+                                            "#fffdfa",
                                     }}
                                 >
 
-                                    <MenuItem value={2026}>
-                                        2026
-                                    </MenuItem>
+                                    {[
+                                        year + 1,
+                                        year,
+                                        year - 1,
+                                        year - 2,
+                                    ].map(
+                                        (item) => (
 
-                                    <MenuItem value={2025}>
-                                        2025
-                                    </MenuItem>
+                                            <MenuItem
+                                                key={item}
+                                                value={item}
+                                            >
+                                                {item}
+                                            </MenuItem>
 
-                                    <MenuItem value={2024}>
-                                        2024
-                                    </MenuItem>
+                                        )
+                                    )}
 
                                 </Select>
 
@@ -419,18 +868,18 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* ================================================= */}
                         {/* MONTH */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={3}
+                            sm={6}
+                            md={2}
                         >
 
                             <FormControl
                                 fullWidth
+                                disabled={loading}
                             >
 
                                 <InputLabel>
@@ -443,60 +892,53 @@ function PayrollPage() {
                                     onChange={(e) => {
 
                                         setMonth(
-                                            e.target.value
+                                            Number(
+                                                e.target.value
+                                            )
                                         );
 
-                                        setPayroll(null);
+                                        setPayroll(
+                                            null
+                                        );
+
+                                    }}
+                                    sx={{
+                                        borderRadius: 2,
+                                        background:
+                                            "#fffdfa",
                                     }}
                                 >
 
-                                    <MenuItem value={1}>
-                                        January
-                                    </MenuItem>
+                                    {Array.from(
+                                        {
+                                            length: 12,
+                                        },
+                                        (_, index) => {
 
-                                    <MenuItem value={2}>
-                                        February
-                                    </MenuItem>
+                                            const value =
+                                                index + 1;
 
-                                    <MenuItem value={3}>
-                                        March
-                                    </MenuItem>
+                                            return (
 
-                                    <MenuItem value={4}>
-                                        April
-                                    </MenuItem>
+                                                <MenuItem
+                                                    key={
+                                                        value
+                                                    }
+                                                    value={
+                                                        value
+                                                    }
+                                                >
+                                                    {
+                                                        monthName(
+                                                            value
+                                                        )
+                                                    }
+                                                </MenuItem>
 
-                                    <MenuItem value={5}>
-                                        May
-                                    </MenuItem>
+                                            );
 
-                                    <MenuItem value={6}>
-                                        June
-                                    </MenuItem>
-
-                                    <MenuItem value={7}>
-                                        July
-                                    </MenuItem>
-
-                                    <MenuItem value={8}>
-                                        August
-                                    </MenuItem>
-
-                                    <MenuItem value={9}>
-                                        September
-                                    </MenuItem>
-
-                                    <MenuItem value={10}>
-                                        October
-                                    </MenuItem>
-
-                                    <MenuItem value={11}>
-                                        November
-                                    </MenuItem>
-
-                                    <MenuItem value={12}>
-                                        December
-                                    </MenuItem>
+                                        }
+                                    )}
 
                                 </Select>
 
@@ -505,14 +947,12 @@ function PayrollPage() {
                         </Grid>
 
 
-                        {/* ================================================= */}
                         {/* GENERATE BUTTON */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={2}
+                            md={3}
                         >
 
                             <Button
@@ -520,21 +960,46 @@ function PayrollPage() {
                                 variant="contained"
                                 size="large"
                                 startIcon={
-                                    <CalculateIcon />
+                                    loading ? (
+                                        <CircularProgress
+                                            size={20}
+                                            sx={{
+                                                color:
+                                                    COLORS.brown,
+                                            }}
+                                        />
+                                    ) : (
+                                        <CalculateIcon />
+                                    )
                                 }
                                 onClick={
                                     handleGeneratePayroll
                                 }
-                                disabled={loading}
+                                disabled={
+                                    loading ||
+                                    employeesLoading
+                                }
                                 sx={{
-                                    height: "56px",
+                                    height: 56,
+                                    borderRadius: 2,
+                                    background:
+                                        "linear-gradient(135deg, #dda625, #c89425)",
+                                    color:
+                                        COLORS.brown,
+                                    fontWeight: 800,
+                                    textTransform:
+                                        "none",
+                                    "&:hover": {
+                                        background:
+                                            "linear-gradient(135deg, #c89425, #b58218)",
+                                    },
                                 }}
                             >
-
-                                {loading
-                                    ? "Generating..."
-                                    : "Generate"}
-
+                                {
+                                    loading
+                                        ? "Processing..."
+                                        : "Generate Payroll"
+                                }
                             </Button>
 
                         </Grid>
@@ -546,367 +1011,938 @@ function PayrollPage() {
             </Card>
 
 
-            {/* ================================================= */}
-            {/* PAYROLL RESULT */}
-            {/* ================================================= */}
+            {/* ==================================================
+                EMPTY STATE
+            ================================================== */}
 
-            {payroll && (
+            {!payroll &&
+                !loading && (
 
-                <>
+                    <Card
+                        sx={{
+                            borderRadius: 3,
+                            border:
+                                `1px solid ${COLORS.border}`,
+                            boxShadow:
+                                "0 5px 18px rgba(60,40,20,0.05)",
+                        }}
+                    >
 
-                    {/* ================================================= */}
-                    {/* EMPLOYEE INFORMATION */}
-                    {/* ================================================= */}
+                        <CardContent
+                            sx={{
+                                py: 7,
+                                textAlign: "center",
+                            }}
+                        >
 
-                    <Card sx={{ mb: 3 }}>
-
-                        <CardContent>
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: "50%",
+                                    mx: "auto",
+                                    mb: 2,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent:
+                                        "center",
+                                    background:
+                                        COLORS.soft,
+                                    color:
+                                        COLORS.goldDark,
+                                }}
+                            >
+                                <CalendarMonthIcon
+                                    sx={{
+                                        fontSize: 30,
+                                    }}
+                                />
+                            </Box>
 
                             <Typography
-                                variant="h5"
-                                fontWeight="600"
+                                sx={{
+                                    fontSize: 20,
+                                    fontWeight: 700,
+                                    color:
+                                        COLORS.brown,
+                                }}
                             >
-                                {
-                                    payroll.employee_name
-                                }
+                                No Payroll Generated
                             </Typography>
 
                             <Typography
-                                color="text.secondary"
+                                sx={{
+                                    mt: 0.7,
+                                    color:
+                                        COLORS.muted,
+                                }}
                             >
-                                Employee ID:{" "}
-                                {
-                                    payroll.employee_id
-                                }
-                            </Typography>
-
-                            <Typography
-                                color="text.secondary"
-                            >
-                                Payroll Period:{" "}
-                                {
-                                    payroll.month
-                                }
-                                /
-                                {
-                                    payroll.year
-                                }
+                                Select an employee, year and month above to calculate payroll.
                             </Typography>
 
                         </CardContent>
 
                     </Card>
 
+                )}
+
+
+            {/* ==================================================
+                PAYROLL RESULT
+            ================================================== */}
+
+            {payroll && (
+
+                <>
+
+                    {/* EMPLOYEE HEADER */}
+
+                    <Card
+                        sx={{
+                            mb: 3,
+                            borderRadius: 3,
+                            border:
+                                `1px solid ${COLORS.border}`,
+                            boxShadow:
+                                "0 5px 18px rgba(60,40,20,0.05)",
+                        }}
+                    >
+
+                        <CardContent
+                            sx={{
+                                p: {
+                                    xs: 2.5,
+                                    md: 3,
+                                },
+                            }}
+                        >
+
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent:
+                                        "space-between",
+                                    alignItems: {
+                                        xs: "flex-start",
+                                        sm: "center",
+                                    },
+                                    flexDirection: {
+                                        xs: "column",
+                                        sm: "row",
+                                    },
+                                    gap: 2,
+                                }}
+                            >
+
+                                <Box>
+
+                                    <Typography
+                                        sx={{
+                                            fontSize: 28,
+                                            fontWeight: 700,
+                                            color:
+                                                COLORS.brown,
+                                        }}
+                                    >
+                                        {
+                                            payroll.employee_name
+                                        }
+                                    </Typography>
+
+                                    <Typography
+                                        sx={{
+                                            color:
+                                                COLORS.muted,
+                                            mt: 0.3,
+                                        }}
+                                    >
+                                        Employee ID:{" "}
+                                        <strong>
+                                            {
+                                                payroll.employee_id
+                                            }
+                                        </strong>
+                                    </Typography>
+
+                                </Box>
+
+
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems:
+                                            "center",
+                                        gap: 1,
+                                        px: 2,
+                                        py: 1,
+                                        borderRadius: 2,
+                                        background:
+                                            COLORS.soft,
+                                        color:
+                                            COLORS.brown,
+                                    }}
+                                >
+
+                                    <CalendarMonthIcon
+                                        sx={{
+                                            fontSize: 19,
+                                        }}
+                                    />
+
+                                    <Typography
+                                        fontWeight={700}
+                                    >
+                                        {
+                                            monthName(
+                                                payroll.month
+                                            )
+                                        }{" "}
+                                        {
+                                            payroll.year
+                                        }
+                                    </Typography>
+
+                                </Box>
+
+                            </Box>
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    {/* ==================================================
+                        SUMMARY CARDS
+                    ================================================== */}
+
+                    <Grid
+                        container
+                        spacing={2}
+                        sx={{
+                            mb: 3,
+                        }}
+                    >
+
+                        {/* WORKING DAYS */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={3}
+                        >
+
+                            <SectionCard
+                                title="Working Days"
+                            >
+
+                                <Typography
+                                    sx={{
+                                        fontSize: 30,
+                                        fontWeight: 800,
+                                        color:
+                                            COLORS.brown,
+                                    }}
+                                >
+                                    {
+                                        payroll.total_working_days
+                                    }
+                                </Typography>
+
+                                <Typography
+                                    fontSize={13}
+                                    color={
+                                        COLORS.muted
+                                    }
+                                >
+                                    Paid days:{" "}
+                                    {
+                                        payroll.paid_days
+                                    }
+                                </Typography>
+
+                            </SectionCard>
+
+                        </Grid>
+
+
+                        {/* GROSS SALARY */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={3}
+                        >
+
+                            <SectionCard
+                                title="Gross Salary"
+                            >
+
+                                <Typography
+                                    sx={{
+                                        fontSize: 30,
+                                        fontWeight: 800,
+                                        color:
+                                            COLORS.brown,
+                                    }}
+                                >
+                                    {
+                                        money(
+                                            payroll.gross_salary
+                                        )
+                                    }
+                                </Typography>
+
+                                <Typography
+                                    fontSize={13}
+                                    color={
+                                        COLORS.muted
+                                    }
+                                >
+                                    Earned:{" "}
+                                    {
+                                        money(
+                                            payroll.earned_salary
+                                        )
+                                    }
+                                </Typography>
+
+                            </SectionCard>
+
+                        </Grid>
+
+
+                        {/* TOTAL DEDUCTIONS */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={3}
+                        >
+
+                            <SectionCard
+                                title="Total Deductions"
+                            >
+
+                                <Typography
+                                    sx={{
+                                        fontSize: 30,
+                                        fontWeight: 800,
+                                        color:
+                                            COLORS.red,
+                                    }}
+                                >
+                                    {
+                                        money(
+                                            payroll.total_deductions
+                                        )
+                                    }
+                                </Typography>
+
+                                <Typography
+                                    fontSize={13}
+                                    color={
+                                        COLORS.muted
+                                    }
+                                >
+                                    PF + tax + salary advance
+                                </Typography>
+
+                            </SectionCard>
+
+                        </Grid>
+
+
+                        {/* NET SALARY */}
+
+                        <Grid
+                            item
+                            xs={12}
+                            sm={6}
+                            md={3}
+                        >
+
+                            <Card
+                                sx={{
+                                    height: "100%",
+                                    borderRadius: 3,
+                                    background:
+                                        "linear-gradient(135deg,#fff7e7,#fffdf8)",
+                                    border:
+                                        `1px solid ${COLORS.border}`,
+                                    boxShadow:
+                                        "0 4px 14px rgba(60,40,20,0.05)",
+                                }}
+                            >
+
+                                <CardContent>
+
+                                    <Typography
+                                        fontSize={14}
+                                        color={
+                                            COLORS.muted
+                                        }
+                                    >
+                                        Net Salary
+                                    </Typography>
+
+                                    <Typography
+                                        sx={{
+                                            mt: 1,
+                                            fontSize: 30,
+                                            fontWeight: 800,
+                                            color:
+                                                COLORS.goldDark,
+                                        }}
+                                    >
+                                        {
+                                            money(
+                                                payroll.net_salary
+                                            )
+                                        }
+                                    </Typography>
+
+                                    <Typography
+                                        fontSize={13}
+                                        color={
+                                            COLORS.muted
+                                        }
+                                    >
+                                        Final payable amount
+                                    </Typography>
+
+                                </CardContent>
+
+                            </Card>
+
+                        </Grid>
+
+                    </Grid>
+
+
+                    {/* ==================================================
+                        DETAILS
+                    ================================================== */}
 
                     <Grid
                         container
                         spacing={3}
                     >
 
-                        {/* ================================================= */}
                         {/* ATTENDANCE */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={6}
+                            md={4}
                         >
 
-                            <Card>
+                            <SectionCard
+                                title="Attendance Summary"
+                            >
 
-                                <CardContent>
+                                <DetailRow
+                                    label="Working Days"
+                                    value={
+                                        payroll.total_working_days
+                                    }
+                                />
 
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="600"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        Attendance Summary
-                                    </Typography>
+                                <DetailRow
+                                    label="Present Days"
+                                    value={
+                                        payroll.present_days
+                                    }
+                                />
 
-                                    <Typography>
-                                        Working Days:{" "}
-                                        {
-                                            payroll.total_working_days
-                                        }
-                                    </Typography>
+                                <DetailRow
+                                    label="Half Days"
+                                    value={
+                                        payroll.half_days
+                                    }
+                                />
 
-                                    <Typography>
-                                        Present Days:{" "}
-                                        {
-                                            payroll.present_days
-                                        }
-                                    </Typography>
+                                <DetailRow
+                                    label="Absent Days"
+                                    value={
+                                        payroll.absent_days
+                                    }
+                                />
 
-                                    <Typography>
-                                        Half Days:{" "}
-                                        {
-                                            payroll.half_days
-                                        }
-                                    </Typography>
+                                <DetailRow
+                                    label="Leave Days"
+                                    value={
+                                        payroll.leave_days
+                                    }
+                                />
 
-                                    <Typography>
-                                        Absent Days:{" "}
-                                        {
-                                            payroll.absent_days
-                                        }
-                                    </Typography>
+                                <Divider
+                                    sx={{
+                                        my: 1.2,
+                                        borderColor:
+                                            COLORS.border,
+                                    }}
+                                />
 
-                                    <Typography>
-                                        Leave Days:{" "}
-                                        {
-                                            payroll.leave_days
-                                        }
-                                    </Typography>
+                                <DetailRow
+                                    label="Paid Days"
+                                    value={
+                                        payroll.paid_days
+                                    }
+                                    strong
+                                />
 
-                                    <Typography
-                                        fontWeight="600"
-                                        sx={{ mt: 1 }}
-                                    >
-                                        Paid Days:{" "}
-                                        {
-                                            payroll.paid_days
-                                        }
-                                    </Typography>
-
-                                </CardContent>
-
-                            </Card>
+                            </SectionCard>
 
                         </Grid>
 
 
-                        {/* ================================================= */}
-                        {/* SALARY */}
-                        {/* ================================================= */}
+                        {/* SALARY DETAILS */}
 
                         <Grid
                             item
                             xs={12}
-                            md={6}
+                            md={4}
                         >
 
-                            <Card>
+                            <SectionCard
+                                title="Salary Details"
+                            >
 
-                                <CardContent>
-
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="600"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        Salary Details
-                                    </Typography>
-
-                                    <Typography>
-                                        Basic Salary: ₹
-                                        {
+                                <DetailRow
+                                    label="Basic Salary"
+                                    value={
+                                        money(
                                             payroll.basic_salary
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography>
-                                        HRA: ₹
-                                        {
+                                <DetailRow
+                                    label="HRA"
+                                    value={
+                                        money(
                                             payroll.hra
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography>
-                                        Allowance: ₹
-                                        {
+                                <DetailRow
+                                    label="Allowance"
+                                    value={
+                                        money(
                                             payroll.allowance
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography
-                                        fontWeight="600"
-                                        sx={{ mt: 1 }}
-                                    >
-                                        Gross Salary: ₹
-                                        {
+                                <Divider
+                                    sx={{
+                                        my: 1.2,
+                                        borderColor:
+                                            COLORS.border,
+                                    }}
+                                />
+
+                                <DetailRow
+                                    label="Gross Salary"
+                                    value={
+                                        money(
                                             payroll.gross_salary
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                    strong
+                                />
 
-                                    <Typography>
-                                        Daily Salary: ₹
-                                        {
+                                <DetailRow
+                                    label="Daily Salary"
+                                    value={
+                                        money(
                                             payroll.daily_salary
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography>
-                                        Earned Salary: ₹
-                                        {
+                                <DetailRow
+                                    label="Earned Salary"
+                                    value={
+                                        money(
                                             payroll.earned_salary
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                </CardContent>
-
-                            </Card>
+                            </SectionCard>
 
                         </Grid>
 
 
-                        {/* ================================================= */}
                         {/* DEDUCTIONS */}
-                        {/* ================================================= */}
 
                         <Grid
                             item
                             xs={12}
-                            md={6}
+                            md={4}
                         >
 
-                            <Card>
+                            <SectionCard
+                                title="Deductions"
+                            >
 
-                                <CardContent>
-
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="600"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        Deductions
-                                    </Typography>
-
-                                    <Typography>
-                                        PF: ₹
-                                        {
+                                <DetailRow
+                                    label="PF"
+                                    value={
+                                        money(
                                             payroll.pf
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography>
-                                        Professional Tax: ₹
-                                        {
+                                <DetailRow
+                                    label="Professional Tax"
+                                    value={
+                                        money(
                                             payroll.professional_tax
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                />
 
-                                    <Typography>
-                                        Advance Deduction: ₹
-                                        {
-                                            payroll.advance_deduction || 0
-                                        }
-                                    </Typography>
+                                {/* IMPORTANT:
+                                    This is the amount recovered
+                                    from the employee's salary
+                                    advance during this payroll month.
+                                */}
 
-                                    <Typography
-                                        fontWeight="600"
-                                        sx={{ mt: 1 }}
-                                    >
-                                        Total Deductions: ₹
-                                        {
+                                <DetailRow
+                                    label="Advance Recovery"
+                                    value={
+                                        money(
+                                            payroll.advance_taken
+                                        )
+                                    }
+                                />
+
+                                <DetailRow
+                                    label="Salary Advance Deduction"
+                                    value={
+                                        money(
+                                            payroll.advance_deduction
+                                        )
+                                    }
+                                />
+
+                                <Divider
+                                    sx={{
+                                        my: 1.2,
+                                        borderColor:
+                                            COLORS.border,
+                                    }}
+                                />
+
+                                <DetailRow
+                                    label="Total Deductions"
+                                    value={
+                                        money(
                                             payroll.total_deductions
-                                        }
-                                    </Typography>
+                                        )
+                                    }
+                                    strong
+                                />
 
-                                </CardContent>
-
-                            </Card>
+                            </SectionCard>
 
                         </Grid>
 
 
-                        {/* ================================================= */}
-                        {/* NET SALARY */}
-                        {/* ================================================= */}
+                        {/* ==================================================
+                            ADVANCE DETAILS
+                        ================================================== */}
 
                         <Grid
                             item
                             xs={12}
-                            md={6}
                         >
 
-                            <Card>
+                            <Card
+                                sx={{
+                                    borderRadius: 3,
+                                    border:
+                                        `1px solid ${COLORS.border}`,
+                                    boxShadow:
+                                        "0 4px 14px rgba(60,40,20,0.05)",
+                                }}
+                            >
 
-                                <CardContent>
+                                <CardContent
+                                    sx={{
+                                        p: {
+                                            xs: 2.5,
+                                            md: 3,
+                                        },
+                                    }}
+                                >
 
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="600"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        Net Salary
-                                    </Typography>
-
-                                    <Typography
-                                        variant="h4"
-                                        fontWeight="700"
-                                        sx={{ mb: 2 }}
-                                    >
-                                        ₹
-                                        {
-                                            payroll.net_salary
-                                        }
-                                    </Typography>
-
-                                    <Typography
-                                        variant="body1"
-                                        sx={{
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Advance Taken: ₹
-                                        {payroll.advance_taken || 0}
-                                    </Typography>
-
-                                    <Typography
-                                        variant="body1"
-                                        sx={{
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        This Month Deduction: ₹
-                                        {payroll.advance_deduction || 0}
-                                    </Typography>
-
-                                    <Typography
-                                        variant="body1"
-                                        sx={{
-                                            mb: 2,
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Advance Remaining: ₹
-                                        {payroll.advance_remaining || 0}
-                                    </Typography>
-
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        startIcon={<SaveIcon />}
-                                        onClick={handleSavePayroll}
-                                        disabled={loading}
-                                        sx={{ mb: 2 }}
-                                    >
-                                        {loading ? "Saving..." : "Save Payroll"}
-                                    </Button>
-                                    {/* DOWNLOAD PAYSLIP */}
-
-                                    <Button
-                                        variant="contained"
-                                        color="success"
-                                        fullWidth
-                                        startIcon={
-                                            <DownloadIcon />
-                                        }
-                                        onClick={
-                                            handleDownloadPayslip
-                                        }
-                                        disabled={
-                                            downloading
-                                        }
+                                    <Grid
+                                        container
+                                        spacing={3}
+                                        alignItems="center"
                                     >
 
-                                        {downloading
-                                            ? "Downloading..."
-                                            : "Download Payslip"}
+                                        {/* ADVANCE INFORMATION */}
 
-                                    </Button>
+                                        <Grid
+                                            item
+                                            xs={12}
+                                            md={7}
+                                        >
+
+                                            <Box
+                                                sx={{
+                                                    display:
+                                                        "flex",
+                                                    alignItems:
+                                                        "center",
+                                                    gap: 1,
+                                                    mb: 2,
+                                                }}
+                                            >
+
+                                                <AccountBalanceWalletIcon
+                                                    sx={{
+                                                        color:
+                                                            COLORS.goldDark,
+                                                    }}
+                                                />
+
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: 20,
+                                                        fontWeight: 700,
+                                                        color:
+                                                            COLORS.brown,
+                                                    }}
+                                                >
+                                                    Salary Advance Details
+                                                </Typography>
+
+                                            </Box>
+
+
+                                            <Grid
+                                                container
+                                                spacing={2}
+                                            >
+
+                                                {/* MAIN ADVANCE */}
+
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={4}
+                                                >
+
+                                                    <InfoBox
+                                                        label="Main Advance"
+                                                        value={
+                                                            money(
+                                                                payroll.main_advance_amount
+                                                            )
+                                                        }
+                                                    />
+
+                                                </Grid>
+
+
+                                                {/* RECOVERED */}
+
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={4}
+                                                >
+
+                                                    <InfoBox
+                                                        label="Recovered This Month"
+                                                        value={
+                                                            money(
+                                                                payroll.advance_deduction
+                                                            )
+                                                        }
+                                                    />
+
+                                                </Grid>
+
+
+                                                {/* REMAINING */}
+
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={4}
+                                                >
+
+                                                    <InfoBox
+                                                        label="Remaining Advance"
+                                                        value={
+                                                            money(
+                                                                payroll.advance_remaining
+                                                            )
+                                                        }
+                                                    />
+
+                                                </Grid>
+
+                                            </Grid>
+
+                                        </Grid>
+
+
+                                        {/* FINAL SALARY + BUTTONS */}
+
+                                        <Grid
+                                            item
+                                            xs={12}
+                                            md={5}
+                                        >
+
+                                            <Box
+                                                sx={{
+                                                    p: 2,
+                                                    borderRadius: 2.5,
+                                                    background:
+                                                        COLORS.soft,
+                                                    border:
+                                                        `1px solid ${COLORS.border}`,
+                                                    mb: 2,
+                                                }}
+                                            >
+
+                                                <Typography
+                                                    fontSize={13}
+                                                    color={
+                                                        COLORS.muted
+                                                    }
+                                                >
+                                                    Final Net Salary
+                                                </Typography>
+
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: 31,
+                                                        fontWeight: 800,
+                                                        color:
+                                                            COLORS.goldDark,
+                                                    }}
+                                                >
+                                                    {
+                                                        money(
+                                                            payroll.net_salary
+                                                        )
+                                                    }
+                                                </Typography>
+
+                                            </Box>
+
+
+                                            <Grid
+                                                container
+                                                spacing={1.5}
+                                            >
+
+                                                {/* SAVE */}
+
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={6}
+                                                >
+
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        startIcon={
+                                                            <SaveIcon />
+                                                        }
+                                                        onClick={
+                                                            handleSavePayroll
+                                                        }
+                                                        disabled={
+                                                            loading
+                                                        }
+                                                        sx={{
+                                                            minHeight: 48,
+                                                            borderRadius: 2,
+                                                            background:
+                                                                "linear-gradient(135deg,#dda625,#c89425)",
+                                                            color:
+                                                                COLORS.brown,
+                                                            fontWeight: 800,
+                                                            textTransform:
+                                                                "none",
+                                                        }}
+                                                    >
+                                                        {
+                                                            loading
+                                                                ? "Saving..."
+                                                                : "Save Payroll"
+                                                        }
+                                                    </Button>
+
+                                                </Grid>
+
+
+                                                {/* DOWNLOAD */}
+
+                                                <Grid
+                                                    item
+                                                    xs={12}
+                                                    sm={6}
+                                                >
+
+                                                    <Button
+                                                        fullWidth
+                                                        variant="contained"
+                                                        startIcon={
+                                                            <DownloadIcon />
+                                                        }
+                                                        onClick={
+                                                            handleDownloadPayslip
+                                                        }
+                                                        disabled={
+                                                            downloading
+                                                        }
+                                                        sx={{
+                                                            minHeight: 48,
+                                                            borderRadius: 2,
+                                                            background:
+                                                                COLORS.green,
+                                                            color:
+                                                                "#fff",
+                                                            fontWeight: 800,
+                                                            textTransform:
+                                                                "none",
+                                                            "&:hover": {
+                                                                background:
+                                                                    "#256b29",
+                                                            },
+                                                        }}
+                                                    >
+                                                        {
+                                                            downloading
+                                                                ? "Downloading..."
+                                                                : "Download Payslip"
+                                                        }
+                                                    </Button>
+
+                                                </Grid>
+
+                                            </Grid>
+
+                                        </Grid>
+
+                                    </Grid>
 
                                 </CardContent>
 
@@ -923,5 +1959,6 @@ function PayrollPage() {
         </Box>
     );
 }
+
 
 export default PayrollPage;

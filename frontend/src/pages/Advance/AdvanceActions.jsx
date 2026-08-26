@@ -16,30 +16,36 @@ function AdvanceActions({
     return (
         <>
             <Tooltip title="Edit Advance">
-
                 <IconButton
-                    color="primary"
-                    onClick={() =>
-                        onEdit(row)
-                    }
+                    onClick={() => onEdit(row)}
+                    sx={{
+                        color: "#d59b16",
+
+                        "&:hover": {
+                            backgroundColor:
+                                "rgba(213,155,22,0.10)",
+                        },
+                    }}
                 >
                     <EditIcon />
                 </IconButton>
-
             </Tooltip>
 
 
             <Tooltip title="Delete Advance">
-
                 <IconButton
-                    color="error"
-                    onClick={() =>
-                        onDelete(row)
-                    }
+                    onClick={() => onDelete(row)}
+                    sx={{
+                        color: "#d32f2f",
+
+                        "&:hover": {
+                            backgroundColor:
+                                "rgba(211,47,47,0.10)",
+                        },
+                    }}
                 >
                     <DeleteIcon />
                 </IconButton>
-
             </Tooltip>
         </>
     );
