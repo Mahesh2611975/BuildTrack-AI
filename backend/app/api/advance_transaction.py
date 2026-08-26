@@ -29,7 +29,7 @@ router = APIRouter(
 
 
 # ==========================================================
-# CREATE DAILY ADVANCE
+# CREATE ADVANCE RECOVERY
 # ==========================================================
 
 @router.post(
@@ -42,17 +42,35 @@ def create_transaction(
     current_admin=Depends(get_current_admin),
 ):
 
-    return (
-        AdvanceTransactionService
-        .create_transaction(
-            db,
-            request,
+    try:
+
+        transaction = (
+            AdvanceTransactionService
+            .create_transaction(
+                db,
+                request,
+            )
         )
-    )
+
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
+    if transaction is None:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Advance not found",
+        )
+
+    return transaction
 
 
 # ==========================================================
-# GET ALL DAILY ADVANCES
+# GET ALL RECOVERIES
 # ==========================================================
 
 @router.get(
@@ -75,7 +93,7 @@ def get_all_transactions(
 
 
 # ==========================================================
-# GET DAILY ADVANCES BY EMPLOYEE
+# GET RECOVERIES BY EMPLOYEE
 # ==========================================================
 
 @router.get(
@@ -100,7 +118,7 @@ def get_transactions_by_employee(
 
 
 # ==========================================================
-# GET DAILY ADVANCES BY MAIN ADVANCE
+# GET RECOVERIES BY ADVANCE
 # ==========================================================
 
 @router.get(
@@ -125,7 +143,7 @@ def get_transactions_by_advance(
 
 
 # ==========================================================
-# GET TRANSACTION BY ID
+# GET RECOVERY BY ID
 # ==========================================================
 
 @router.get(
@@ -150,14 +168,14 @@ def get_transaction(
 
         raise HTTPException(
             status_code=404,
-            detail="Daily advance transaction not found",
+            detail="Advance recovery not found",
         )
 
     return transaction
 
 
 # ==========================================================
-# DELETE DAILY ADVANCE
+# DELETE RECOVERY
 # ==========================================================
 
 @router.delete(
@@ -181,13 +199,12 @@ def delete_transaction(
 
         raise HTTPException(
             status_code=404,
-            detail="Daily advance transaction not found",
+            detail="Advance recovery not found",
         )
 
     return {
         "success": True,
         "message": (
-            "Daily advance transaction "
-            "deleted successfully"
+            "Advance recovery deleted successfully"
         ),
     }

@@ -42,20 +42,20 @@ class AdvanceTransaction(Base):
     )
 
     # ==========================================================
-    # MAIN ADVANCE
+    # EMPLOYEE ADVANCE
     # ==========================================================
 
     advance_id = Column(
         Integer,
         ForeignKey(
             "advances.id",
-            ondelete="SET NULL",
+            ondelete="CASCADE",
         ),
-        nullable=True,
+        nullable=False,
     )
 
     # ==========================================================
-    # DAILY AMOUNT
+    # RECOVERY AMOUNT
     # ==========================================================
 
     amount = Column(
@@ -64,7 +64,7 @@ class AdvanceTransaction(Base):
     )
 
     # ==========================================================
-    # TRANSACTION DATE
+    # RECOVERY DATE
     # ==========================================================
 
     transaction_date = Column(

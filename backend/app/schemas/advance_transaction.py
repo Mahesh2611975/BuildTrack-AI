@@ -10,11 +10,7 @@ class AdvanceTransactionCreate(BaseModel):
 
     employee_id: int
 
-    # Optional link to a main advance.
-    #
-    # Usually for our daily advance system
-    # this can remain None.
-
+    # Main salary advance being recovered
     advance_id: int | None = None
 
     amount: float = Field(
@@ -33,6 +29,8 @@ class AdvanceTransactionResponse(BaseModel):
 
     employee_id: int
 
+    # Nullable because old records may have
+    # advance_id = NULL
     advance_id: int | None
 
     amount: float

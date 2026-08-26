@@ -4,8 +4,11 @@ from sqlalchemy import (
     String,
     Float,
     ForeignKey,
+    DateTime,
+    UniqueConstraint,
 )
 
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from app.database.base import Base
@@ -15,11 +18,32 @@ class Payroll(Base):
 
     __tablename__ = "payrolls"
 
+    # ==========================================================
+    # TABLE CONSTRAINTS
+    # ==========================================================
+
+    __table_args__ = (
+        UniqueConstraint(
+            "employee_id",
+            "year",
+            "month",
+            name="uq_payroll_employee_year_month",
+        ),
+    )
+
+    # ==========================================================
+    # PRIMARY KEY
+    # ==========================================================
+
     id = Column(
         Integer,
         primary_key=True,
         index=True,
     )
+
+    # ==========================================================
+    # EMPLOYEE
+    # ==========================================================
 
     employee_id = Column(
         Integer,
@@ -28,6 +52,7 @@ class Payroll(Base):
             ondelete="CASCADE",
         ),
         nullable=False,
+        index=True,
     )
 
     employee_name = Column(
@@ -40,6 +65,10 @@ class Payroll(Base):
         nullable=False,
     )
 
+    # ==========================================================
+    # PAYROLL PERIOD
+    # ==========================================================
+
     month = Column(
         Integer,
         nullable=False,
@@ -49,6 +78,48 @@ class Payroll(Base):
         Integer,
         nullable=False,
     )
+
+    # ==========================================================
+    # PAYROLL STATUS
+    # ==========================================================
+    #
+    # DRAFT
+    # FINALIZED
+    # PAID
+    #
+    # New saved payroll starts as FINALIZED.
+    # ==========================================================
+
+    status = Column(
+        String(20),
+        nullable=False,
+        default="FINALIZED",
+        index=True,
+    )
+
+    # ==========================================================
+    # PAYROLL DATES
+    # ==========================================================
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    finalized_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    paid_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # ==========================================================
+    # ATTENDANCE SNAPSHOT
+    # ==========================================================
 
     total_working_days = Column(
         Integer,
@@ -85,6 +156,10 @@ class Payroll(Base):
         nullable=False,
     )
 
+    # ==========================================================
+    # SALARY SNAPSHOT
+    # ==========================================================
+
     basic_salary = Column(
         Float,
         nullable=False,
@@ -117,6 +192,10 @@ class Payroll(Base):
         nullable=False,
     )
 
+    # ==========================================================
+    # STATUTORY DEDUCTIONS SNAPSHOT
+    # ==========================================================
+
     pf = Column(
         Float,
         default=0,
@@ -130,31 +209,31 @@ class Payroll(Base):
     )
 
     # ==========================================================
-    # ADVANCE DETAILS
+    # ADVANCE SNAPSHOT
     # ==========================================================
 
-    # Original/main employee advance amount
+    # Original salary advance amount
     main_advance_amount = Column(
         Float,
         default=0,
         nullable=False,
     )
 
-    # Total daily advances taken during the payroll month
+    # Total recovery transactions during this month
     advance_taken = Column(
         Float,
         default=0,
         nullable=False,
     )
 
-    # Daily advance deducted from this month's salary
+    # Actual amount deducted from this month's salary
     advance_deduction = Column(
         Float,
         default=0,
         nullable=False,
     )
 
-    # Remaining balance of the main advance
+    # Remaining advance balance
     advance_remaining = Column(
         Float,
         default=0,
@@ -162,7 +241,7 @@ class Payroll(Base):
     )
 
     # ==========================================================
-    # TOTAL PAYROLL DEDUCTIONS
+    # FINAL PAYROLL TOTALS
     # ==========================================================
 
     total_deductions = Column(
@@ -175,6 +254,10 @@ class Payroll(Base):
         Float,
         nullable=False,
     )
+
+    # ==========================================================
+    # EMPLOYEE RELATIONSHIP
+    # ==========================================================
 
     employee = relationship(
         "Employee",

@@ -6,6 +6,8 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
+from fastapi.responses import StreamingResponse
+
 from app.database.session import get_db
 
 from app.auth.dependencies import (
@@ -17,8 +19,13 @@ from app.schemas.payroll import PayrollResponse
 from app.services.payroll_service import (
     PayrollService,
 )
-from fastapi.responses import StreamingResponse
+
 from app.reports.payslip_pdf import PayslipPDF
+
+
+# ==========================================================
+# ROUTER
+# ==========================================================
 
 router = APIRouter(
     prefix="/payroll",
@@ -49,11 +56,19 @@ def generate_payroll(
         month,
     )
 
+    # ------------------------------------------------------
+    # EMPLOYEE NOT FOUND
+    # ------------------------------------------------------
+
     if payroll is None:
         raise HTTPException(
             status_code=404,
             detail="Employee not found",
         )
+
+    # ------------------------------------------------------
+    # SALARY STRUCTURE NOT FOUND
+    # ------------------------------------------------------
 
     if payroll == "salary_not_found":
         raise HTTPException(
@@ -62,6 +77,8 @@ def generate_payroll(
         )
 
     return payroll
+
+
 # ==========================================================
 # SAVE PAYROLL
 # ==========================================================
@@ -75,43 +92,81 @@ def save_payroll(
     current_admin=Depends(get_current_admin),
 ):
 
-    # Generate the latest payroll calculation
-    payroll = PayrollService.generate_payroll(
-        db,
-        employee_id,
-        year,
-        month,
-    )
+    try:
 
-    # Employee not found
-    if payroll is None:
+        # --------------------------------------------------
+        # GENERATE LATEST PAYROLL CALCULATION
+        # --------------------------------------------------
 
-        raise HTTPException(
-            status_code=404,
-            detail="Employee not found",
+        payroll = PayrollService.generate_payroll(
+            db,
+            employee_id,
+            year,
+            month,
         )
 
-    # Salary structure not found
-    if payroll == "salary_not_found":
+        # --------------------------------------------------
+        # EMPLOYEE NOT FOUND
+        # --------------------------------------------------
 
-        raise HTTPException(
-            status_code=404,
-            detail="Salary structure not found",
-        )
+        if payroll is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Employee not found",
+            )
 
-    # Save payroll
-    saved_payroll = (
-        PayrollService.save_payroll(
+        # --------------------------------------------------
+        # SALARY STRUCTURE NOT FOUND
+        # --------------------------------------------------
+
+        if payroll == "salary_not_found":
+            raise HTTPException(
+                status_code=404,
+                detail="Salary structure not found",
+            )
+
+        # --------------------------------------------------
+        # SAVE / FINALIZE PAYROLL
+        # --------------------------------------------------
+
+        saved_payroll = PayrollService.save_payroll(
             db,
             payroll,
         )
-    )
 
-    return {
-        "success": True,
-        "message": "Payroll saved successfully",
-        "data": saved_payroll,
-    }
+        # --------------------------------------------------
+        # SUCCESS RESPONSE
+        # --------------------------------------------------
+
+        return {
+            "success": True,
+            "message": "Payroll saved successfully",
+            "data": saved_payroll,
+        }
+
+    except ValueError as e:
+
+        # --------------------------------------------------
+        # FINALIZED PAYROLL PROTECTION
+        # --------------------------------------------------
+        #
+        # Example:
+        #
+        # Payroll already finalized for 8/2026.
+        # Historical payroll cannot be overwritten.
+        #
+        # Return 409 instead of 500.
+        # --------------------------------------------------
+
+        raise HTTPException(
+            status_code=409,
+            detail=str(e),
+        )
+
+
+# ==========================================================
+# DOWNLOAD PAYSLIP
+# ==========================================================
 
 @router.get(
     "/{employee_id}/{year}/{month}/payslip",
@@ -124,6 +179,10 @@ def download_payslip(
     current_admin=Depends(get_current_admin),
 ):
 
+    # ------------------------------------------------------
+    # GENERATE PAYROLL DATA
+    # ------------------------------------------------------
+
     payroll = PayrollService.generate_payroll(
         db,
         employee_id,
@@ -131,11 +190,19 @@ def download_payslip(
         month,
     )
 
+    # ------------------------------------------------------
+    # EMPLOYEE NOT FOUND
+    # ------------------------------------------------------
+
     if payroll is None:
         raise HTTPException(
             status_code=404,
             detail="Employee not found",
         )
+
+    # ------------------------------------------------------
+    # SALARY STRUCTURE NOT FOUND
+    # ------------------------------------------------------
 
     if payroll == "salary_not_found":
         raise HTTPException(
@@ -143,13 +210,28 @@ def download_payslip(
             detail="Salary structure not found",
         )
 
-    pdf = PayslipPDF.generate(payroll)
+    # ------------------------------------------------------
+    # GENERATE PDF
+    # ------------------------------------------------------
+
+    pdf = PayslipPDF.generate(
+        payroll
+    )
+
+    # ------------------------------------------------------
+    # FILE NAME
+    # ------------------------------------------------------
 
     filename = (
         f"payslip_"
         f"{payroll['employee_id']}_"
-        f"{year}_{month}.pdf"
+        f"{year}_"
+        f"{month}.pdf"
     )
+
+    # ------------------------------------------------------
+    # RETURN PDF
+    # ------------------------------------------------------
 
     return StreamingResponse(
         pdf,
