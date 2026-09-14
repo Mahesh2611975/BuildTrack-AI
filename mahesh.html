@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalaburagi Khanavali &mdash; Restaurant Manager</title>
+
+<!-- ============================================================
+     EXTERNAL LIBRARIES (CDN ONLY)
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:            #FFF8E7;
+  --bg-warm:       #FBEFD8;
+  --primary:       #5C4033;
+  --secondary:     #3E2723;
+  --accent:        #C89B3C;
+  --accent-soft:   #E7CE93;
+  --card:          #FFFDF8;
+  --ivory:         #FFFCF4;
+  --line:          #EADFC6;
+  --text:          #3E2723;
+  --text-soft:     #8A7460;
+  --good:          #3F7D4F;
+  --bad:           #B0452E;
+  --warn:          #C89B3C;
+  --shadow-sm:     0 2px 8px rgba(92,64,51,0.09);
+  --shadow-md:     0 10px 26px rgba(92,64,51,0.14);
+  --shadow-lg:     0 18px 44px rgba(92,64,51,0.22);
+  --radius:        16px;
+  --radius-sm:     10px;
+  --font-display:  'Fraunces', serif;
+  --font-body:     'Manrope', sans-serif;
+  --sidebar-w:     240px;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:
+    radial-gradient(1200px 600px at 100% -10%, var(--accent-soft) 0%, transparent 55%),
+    radial-gradient(900px 500px at -10% 110%, #F3E2BC 0%, transparent 50%),
+    var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+h1,h2,h3,h4{ font-family:var(--font-display); color:var(--secondary); margin:0 0 4px; }
+a{ color:inherit; }
+button{ font-family:var(--font-body); cursor:pointer; }
+::selection{ background:var(--accent-soft); }
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{ background:var(--accent-soft); border-radius:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+
+/* focus visibility */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px;
+}
+
+/* ============================================================
+   2. APP SHELL — SIDEBAR + TOPBAR
+   ============================================================ */
+#app{ display:flex; min-height:100vh; }
+
+.sidebar{
+  width:var(--sidebar-w); flex-shrink:0;
+  background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+  color:#F4E9D8;
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  z-index:60;
+  transition:transform .25s ease;
+}
+
+.sidebar-overlay{
+  display:none; position:fixed; inset:0; background:rgba(62,39,35,0.5);
+  z-index:50; backdrop-filter:blur(1px);
+}
+.sidebar-overlay.show{ display:block; }
+
+.hamburger-btn{ display:none !important; }
+
+@media (max-width:900px){
+  .sidebar{
+    position:fixed; left:0; top:0; height:100vh;
+    transform:translateX(-105%);
+    box-shadow:var(--shadow-lg);
+  }
+  .sidebar.open{ transform:translateX(0); }
+  .hamburger-btn{ display:flex; }
+  .main{ width:100%; }
+}
+.brand{
+  display:flex; align-items:center; gap:12px;
+  padding:26px 22px 20px;
+  border-bottom:1px solid rgba(244,233,216,0.12);
+}
+.brand-mark{
+  width:42px; height:42px; border-radius:12px;
+  background:linear-gradient(145deg, var(--accent), #a97e2c);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:19px; color:var(--secondary);
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  flex-shrink:0;
+}
+.brand-text .t1{ font-family:var(--font-display); font-size:16.5px; font-weight:600; line-height:1.15; color:#FBEFD8; }
+.brand-text .t2{ font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:#C9AE86; margin-top:3px; }
+
+.nav{ flex:1; padding:16px 12px; overflow-y:auto; }
+.nav-item{
+  display:flex; align-items:center; gap:12px;
+  padding:11px 14px; margin-bottom:3px; border-radius:11px;
+  color:#E4D2B4; text-decoration:none; font-size:14px; font-weight:500;
+  cursor:pointer; transition:background .15s ease, color .15s ease, transform .1s ease;
+  border:none; background:none; width:100%; text-align:left;
+}
+.nav-item i{ width:18px; text-align:center; font-size:15px; opacity:.9; }
+.nav-item:hover{ background:rgba(244,233,216,0.08); color:#FBEFD8; }
+.nav-item.active{ background:var(--accent); color:var(--secondary); font-weight:700; box-shadow:var(--shadow-sm); }
+.nav-item.active i{ opacity:1; }
+
+.sidebar-foot{ padding:16px; border-top:1px solid rgba(244,233,216,0.12); }
+.sync-pill{
+  display:flex; align-items:center; gap:8px; font-size:11.5px; color:#C9AE86;
+  padding:8px 10px; border-radius:10px; background:rgba(0,0,0,0.15);
+}
+.dot{ width:7px; height:7px; border-radius:50%; background:#8A7460; flex-shrink:0; }
+.dot.on{ background:#6FCF7C; box-shadow:0 0 6px #6FCF7C; }
+.dot.off{ background:#D9784F; }
+
+.main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+
+.topbar{
+  position:sticky; top:0; z-index:30;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 30px; background:rgba(255,248,231,0.86); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+  gap:10px;
+}
+.topbar h1{ font-size:21px; }
+.topbar .sub{ font-size:12.5px; color:var(--text-soft); margin-top:2px; }
+.topbar-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+.topbar-left .titles{ min-width:0; }
+.topbar-left .titles h1, .topbar-left .titles .sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.topbar-right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+@media (max-width:900px){
+  .topbar{ padding:12px 14px; }
+  .topbar h1{ font-size:17px; }
+  .topbar .sub{ font-size:11px; }
+  .view{ padding:16px 14px 50px; }
+  #btn-signin span.btn-label{ display:none; }
+  #btn-signin{ padding:10px 12px; }
+}
+@media (max-width:480px){
+  .topbar .sub{ display:none; }
+}
+
+.icon-btn{
+  width:38px; height:38px; border-radius:11px; border:1px solid var(--line);
+  background:var(--ivory); display:flex; align-items:center; justify-content:center;
+  color:var(--primary); font-size:14px; transition:transform .12s ease, box-shadow .12s ease;
+}
+.icon-btn:hover{ box-shadow:var(--shadow-sm); transform:translateY(-1px); }
+
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; border-radius:11px; border:none;
+  font-size:13.5px; font-weight:700; letter-spacing:.01em;
+  transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.btn:hover{ transform:translateY(-1px); }
+.btn:active{ transform:translateY(0) scale(0.97); }
+.icon-btn:active{ transform:scale(0.92); }
+.nav-item:active{ transform:scale(0.98); }
+.btn-primary{ background:linear-gradient(145deg, var(--primary), var(--secondary)); color:#FBEFD8; box-shadow:var(--shadow-sm); }
+.btn-accent{ background:linear-gradient(145deg, var(--accent), #a97e2c); color:var(--secondary); box-shadow:var(--shadow-sm); }
+.btn-ghost{ background:var(--ivory); color:var(--primary); border:1px solid var(--line); }
+.btn-danger{ background:#FBE8E2; color:var(--bad); border:1px solid #F1C7B8; }
+.btn-sm{ padding:7px 12px; font-size:12.5px; border-radius:9px; }
+.btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+.view{ padding:26px 30px 60px; }
+.view-hidden{ display:none; }
+
+/* ============================================================
+   3. CARDS / GRID / KPIs
+   ============================================================ */
+.grid{ display:grid; gap:18px; }
+.grid-4{ grid-template-columns:repeat(4,1fr); }
+.grid-3{ grid-template-columns:repeat(3,1fr); }
+.grid-2{ grid-template-columns:2fr 1fr; }
+@media (max-width:1180px){ .grid-4{ grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+@media (max-width:640px){
+  .grid{ gap:12px; }
+  .grid-4,.grid-3{ grid-template-columns:1fr; }
+  .card{ padding:15px; border-radius:14px; }
+  .kpi .k-value{ font-size:24px; }
+  .card-title h3{ font-size:14px; }
+  table.data{ font-size:12.5px; }
+  table.data th, table.data td{ padding:9px 10px; }
+  .btn{ padding:10px 14px; font-size:13px; }
+  .modal{ padding:20px 18px 18px; border-radius:14px; max-height:92vh; }
+  .section-head{ flex-direction:column; align-items:stretch; }
+  .search-box{ width:100%; }
+  .chart-box{ height:220px; }
+  .chart-box.tall{ height:240px; }
+}
+
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; box-shadow:var(--shadow-sm);
+}
+.card-title{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.card-title h3{ font-size:15.5px; }
+.card-title .hint{ font-size:11.5px; color:var(--text-soft); font-weight:500; }
+
+.kpi{ position:relative; overflow:hidden; }
+.kpi .k-label{ font-size:12px; color:var(--text-soft); font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+.kpi .k-value{ font-family:var(--font-display); font-size:29px; font-weight:600; color:var(--secondary); margin-top:6px; }
+.kpi .k-sub{ font-size:12px; margin-top:6px; font-weight:600; }
+.kpi .k-sub.up{ color:var(--good); }
+.kpi .k-sub.down{ color:var(--bad); }
+.kpi .k-icon{
+  position:absolute; right:16px; top:16px; width:38px; height:38px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+  background:var(--bg-warm); color:var(--accent);
+}
+
+.badge{ display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:100px; font-size:11.5px; font-weight:700; }
+.badge-good{ background:#E4F3E7; color:var(--good); }
+.badge-bad{ background:#FBE8E2; color:var(--bad); }
+.badge-warn{ background:#FBF1DC; color:#9C7A22; }
+
+/* ============================================================
+   4. TABLES
+   ============================================================ */
+.table-wrap{ overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--line); }
+table.data{ width:100%; border-collapse:collapse; font-size:13.5px; background:var(--ivory); }
+table.data th{
+  text-align:left; padding:11px 14px; background:var(--bg-warm); color:var(--secondary);
+  font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; font-weight:700;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.data td{ padding:11px 14px; border-bottom:1px solid var(--line); color:var(--text); }
+table.data tbody tr:hover{ background:var(--bg-warm); }
+table.data tbody tr:last-child td{ border-bottom:none; }
+.row-actions{ display:flex; gap:6px; }
+.mini-btn{
+  width:28px; height:28px; border-radius:8px; border:1px solid var(--line); background:var(--card);
+  display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--primary);
+}
+.mini-btn:hover{ background:var(--bg-warm); }
+.mini-btn.danger{ color:var(--bad); }
+.empty-row td{ text-align:center; padding:32px; color:var(--text-soft); font-style:italic; }
+
+/* ============================================================
+   5. FORMS / MODALS
+   ============================================================ */
+.form-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+.form-grid.cols-1{ grid-template-columns:1fr; }
+.form-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+@media (max-width:640px){ .form-grid{ grid-template-columns:1fr; } }
+label{ font-size:12px; font-weight:700; color:var(--primary); display:block; margin-bottom:6px; }
+input,select,textarea{
+  width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid var(--line);
+  background:var(--ivory); font-size:13.5px; color:var(--text); font-family:var(--font-body);
+}
+@media (max-width:640px){
+  input,select,textarea{ font-size:16px; padding:11px 12px; } /* 16px prevents iOS auto-zoom */
+  .nav-item{ padding:13px 14px; font-size:14.5px; }
+  .mini-btn{ width:32px; height:32px; }
+  .icon-btn{ width:40px; height:40px; }
+}
+input:focus,select:focus,textarea:focus{ border-color:var(--accent); }
+.field{ margin-bottom:2px; }
+.form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(62,39,35,0.45); backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
+}
+.modal-overlay.hidden{ display:none; }
+.modal{
+  width:100%; max-width:560px; max-height:88vh; overflow-y:auto;
+  background:var(--card); border-radius:18px; padding:26px 26px 22px; box-shadow:var(--shadow-lg);
+  border:1px solid var(--line);
+}
+.modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.modal-head h3{ font-size:18px; }
+.modal-close{ background:none; border:none; font-size:18px; color:var(--text-soft); }
+
+/* Toasts */
+#toast-stack{ position:fixed; bottom:22px; right:22px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  padding:13px 18px; border-radius:12px; background:var(--secondary); color:#FBEFD8; font-size:13.5px;
+  box-shadow:var(--shadow-lg); display:flex; align-items:center; gap:10px; min-width:240px;
+  animation:slidein .25s ease;
+}
+.toast.success{ background:#2F5D3A; }
+.toast.error{ background:#7A2E1F; }
+.toast.warn{ background:#8A6A1E; }
+@keyframes slidein{ from{ transform:translateY(12px); opacity:0;} to{ transform:translateY(0); opacity:1; } }
+
+/* Section utility */
+.section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+.search-box{ position:relative; width:260px; }
+.search-box i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-soft); font-size:12.5px; }
+.search-box input{ padding-left:32px; }
+.tabs{ display:flex; gap:6px; background:var(--bg-warm); padding:4px; border-radius:11px; }
+.tab-btn{ padding:7px 14px; border:none; background:none; border-radius:8px; font-size:12.5px; font-weight:700; color:var(--text-soft); }
+.tab-btn.active{ background:var(--card); color:var(--secondary); box-shadow:var(--shadow-sm); }
+
+.stock-bar{ height:6px; border-radius:6px; background:var(--line); overflow:hidden; margin-top:5px; }
+.stock-bar > span{ display:block; height:100%; background:var(--good); border-radius:6px; }
+.stock-bar.low > span{ background:var(--bad); }
+
+.callout{
+  border-radius:14px; padding:14px 16px; font-size:13px; display:flex; gap:10px; align-items:flex-start;
+  border:1px solid var(--line); background:var(--bg-warm); color:var(--secondary);
+}
+.callout i{ margin-top:2px; color:var(--accent); }
+.callout.warn{ background:#FBF1DC; border-color:#E9D9AA; }
+.callout.danger{ background:#FBE8E2; border-color:#F1C7B8; color:var(--bad); }
+
+.chart-box{ position:relative; height:260px; }
+.chart-box.tall{ height:320px; }
+
+footer.app-footer{ text-align:center; padding:26px; color:var(--text-soft); font-size:12px; }
+
+/* ============================================================
+   MOBILE APP-STYLE BOTTOM NAVIGATION
+   ============================================================ */
+.bottom-nav{
+  display:none;
+  position:fixed; left:0; right:0; bottom:0; z-index:55;
+  background:rgba(255,253,248,0.94); backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(62,39,35,0.10);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+}
+.bottom-nav-inner{ display:flex; align-items:stretch; justify-content:space-between; gap:2px; }
+.bn-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  background:none; border:none; padding:7px 2px 6px; border-radius:14px;
+  color:var(--text-soft); font-size:10.5px; font-weight:700; letter-spacing:.01em;
+  transition:color .15s ease, transform .12s ease;
+}
+.bn-item i{ font-size:17px; transition:transform .15s ease; }
+.bn-item:active{ transform:scale(0.92); }
+.bn-item.active{ color:var(--primary); }
+.bn-item.active i{ transform:translateY(-1px); }
+.bn-item.active .bn-pill{ background:var(--accent-soft); }
+.bn-pill{ width:38px; height:24px; border-radius:20px; display:flex; align-items:center; justify-content:center; }
+
+@media (max-width:900px){
+  .bottom-nav{ display:block; }
+  .main{ padding-bottom:0; }
+  .view{ padding-bottom:96px; }
+  footer.app-footer{ padding-bottom:calc(26px + 74px + env(safe-area-inset-bottom)); }
+}
+
+/* Floating quick-action button — mobile only, app-style shortcut */
+.fab{
+  display:none; position:fixed; right:18px; z-index:56;
+  bottom:calc(84px + env(safe-area-inset-bottom));
+  width:56px; height:56px; border-radius:50%; border:none;
+  background:linear-gradient(150deg, var(--accent), #a97e2c);
+  color:var(--secondary); font-size:20px;
+  box-shadow:0 10px 26px rgba(200,155,60,0.45), 0 2px 8px rgba(0,0,0,0.15);
+  align-items:center; justify-content:center;
+  transition:transform .12s ease;
+}
+.fab:active{ transform:scale(0.92); }
+@media (max-width:900px){ .fab.show{ display:flex; } }
+
+@media print{ .sidebar,.topbar{ display:none; } }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============================================================
+       SIDEBAR
+       ============================================================ -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">KK</div>
+      <div class="brand-text">
+        <div class="t1">Kalaburagi Khanavali</div>
+        <div class="t2">Manager</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav-list">
+      <button class="nav-item active" data-view="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
+      <button class="nav-item" data-view="inventory"><i class="fa-solid fa-boxes-stacked"></i>Inventory</button>
+      <button class="nav-item" data-view="consumption"><i class="fa-solid fa-fire-burner"></i>Consumption</button>
+      <button class="nav-item" data-view="sales"><i class="fa-solid fa-cash-register"></i>Daily Sales</button>
+      <button class="nav-item" data-view="expenses"><i class="fa-solid fa-receipt"></i>Expenses</button>
+      <button class="nav-item" data-view="employees"><i class="fa-solid fa-users"></i>Employees</button>
+      <button class="nav-item" data-view="reports"><i class="fa-solid fa-file-invoice-dollar"></i>Reports</button>
+      <button class="nav-item" data-view="settings"><i class="fa-solid fa-gear"></i>Settings</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="sync-pill">
+        <span class="dot off" id="sync-dot"></span>
+        <span id="sync-label">Not connected to Sheets</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN
+       ============================================================ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn hamburger-btn" id="btn-hamburger" title="Menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="titles">
+          <h1 id="view-title">Dashboard</h1>
+          <div class="sub" id="view-sub">Today's snapshot of the restaurant</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="btn-refresh" title="Reload from Google Sheets"><i class="fa-solid fa-rotate"></i></button>
+        <button class="btn btn-ghost btn-sm" id="btn-signin"><i class="fa-brands fa-google"></i><span class="btn-label">&nbsp;Connect Sheets</span></button>
+      </div>
+    </div>
+
+    <!-- ---------------- DASHBOARD ---------------- -->
+    <section class="view" id="view-dashboard">
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div class="card kpi"><div class="k-icon"><i class="fa-solid fa-sack-dollar"></i></div><div class="k-label">Today's Sales</div><div class="k-value" id="kpi-sales">₹0</div><div class="k-sub" id="kpi-sales-sub">Cash + UPI</div></div>
+        <div class="card kpi"><div class="k-icon"><i class="fa-solid fa-carrot"></i></div><div class="k-label">Grocery Used Today</div><div class="k-value" id="kpi-consumption">₹0</div><div class="k-sub">Consumption cost</div></div>
+        <div class="card kpi"><div class="k-icon"><i class="fa-solid fa-file-invoice"></i></div><div class="k-label">Today's Expenses</div><div class="k-value" id="kpi-expenses">₹0</div><div class="k-sub">Excl. salary &amp; rent</div></div>
+        <div class="card kpi"><div class="k-icon"><i class="fa-solid fa-chart-line"></i></div><div class="k-label">Today's Profit</div><div class="k-value" id="kpi-profit">₹0</div><div class="k-sub" id="kpi-profit-sub">&nbsp;</div></div>
+      </div>
+
+      <div class="grid grid-3" style="margin-bottom:18px;">
+        <div class="card"><div class="k-label">Weekly Profit (7 days)</div><div class="k-value" id="kpi-week" style="font-size:23px;">₹0</div></div>
+        <div class="card"><div class="k-label">15-Day Profit</div><div class="k-value" id="kpi-15" style="font-size:23px;">₹0</div></div>
+        <div class="card"><div class="k-label">Monthly Profit (30 days)</div><div class="k-value" id="kpi-month" style="font-size:23px;">₹0</div></div>
+      </div>
+
+      <div class="grid grid-2" style="margin-bottom:18px;">
+        <div class="card">
+          <div class="card-title"><h3>Profit Trend — Last 30 Days</h3><span class="hint">Auto-calculated</span></div>
+          <div class="chart-box tall"><canvas id="chart-profit-trend"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Today's Expense Split</h3></div>
+          <div class="chart-box tall"><canvas id="chart-expense-split"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Cash vs UPI — Last 7 Days</h3></div>
+          <div class="chart-box"><canvas id="chart-sales-mix"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Low Stock Alerts</h3><span class="hint" id="low-stock-count">0 items</span></div>
+          <div id="low-stock-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- INVENTORY ---------------- -->
+    <section class="view view-hidden" id="view-inventory">
+      <div class="section-head">
+        <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input id="inv-search" placeholder="Search item or category..."></div>
+        <button class="btn btn-accent" id="btn-add-purchase"><i class="fa-solid fa-plus"></i>Record Purchase</button>
+      </div>
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title"><h3>Current Stock (aggregated by item)</h3><span class="hint" id="inv-agg-hint"></span></div>
+        <div class="table-wrap"><table class="data" id="inv-agg-table">
+          <thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Remaining Qty</th><th>Stock Level</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><h3>Purchase Batches</h3><span class="hint">FIFO consumption applies oldest batch first</span></div>
+        <div class="table-wrap"><table class="data" id="inv-batch-table">
+          <thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Purchased Qty</th><th>Purchase Price</th><th>Cost / Unit</th><th>Date</th><th>Remaining</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ---------------- CONSUMPTION ---------------- -->
+    <section class="view view-hidden" id="view-consumption">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Log Grocery Consumption</h3></div>
+          <div class="callout" style="margin-bottom:14px;"><i class="fa-solid fa-circle-info"></i><div>Only the value of groceries actually used today is deducted as expense — FIFO from the oldest purchase batch of that item.</div></div>
+          <form id="form-consumption">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Item</label><select id="cons-item" required></select></div>
+              <div class="form-grid cols-3">
+                <div class="field"><label>Quantity Used</label><input type="number" step="0.01" min="0.01" id="cons-qty" required></div>
+                <div class="field"><label>Date</label><input type="date" id="cons-date" required></div>
+                <div class="field"><label>Available</label><input type="text" id="cons-available" readonly></div>
+              </div>
+              <div class="field"><label>Notes (optional)</label><input type="text" id="cons-notes" placeholder="e.g. lunch service"></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Log Consumption</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Recent Consumption</h3></div>
+          <div class="table-wrap"><table class="data" id="cons-table">
+            <thead><tr><th>Date</th><th>Item</th><th>Qty Used</th><th>Cost</th><th>Notes</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- SALES ---------------- -->
+    <section class="view view-hidden" id="view-sales">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Add Daily Sales</h3></div>
+          <form id="form-sales">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Date</label><input type="date" id="sale-date" required></div>
+              <div class="form-grid cols-2">
+                <div class="field"><label>Cash Collection (₹)</label><input type="number" step="0.01" min="0" id="sale-cash" required></div>
+                <div class="field"><label>UPI Collection (₹)</label><input type="number" step="0.01" min="0" id="sale-upi" required></div>
+              </div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Save Sales</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Sales History</h3></div>
+          <div class="table-wrap"><table class="data" id="sales-table">
+            <thead><tr><th>Date</th><th>Cash</th><th>UPI</th><th>Total</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- EXPENSES ---------------- -->
+    <section class="view view-hidden" id="view-expenses">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Add Daily Expense</h3></div>
+          <form id="form-expense">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Expense Name</label>
+                <select id="exp-name">
+                  <option>Vegetables</option><option>Gas</option><option>Electricity</option>
+                  <option>Water</option><option>Cleaning</option><option>Miscellaneous</option><option value="__custom">Other (type below)</option>
+                </select>
+              </div>
+              <div class="field" id="exp-custom-wrap" style="display:none;"><label>Custom Name</label><input type="text" id="exp-custom"></div>
+              <div class="form-grid cols-2">
+                <div class="field"><label>Amount (₹)</label><input type="number" step="0.01" min="0" id="exp-amount" required></div>
+                <div class="field"><label>Date</label><input type="date" id="exp-date" required></div>
+              </div>
+              <div class="field"><label>Notes</label><input type="text" id="exp-notes"></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Save Expense</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Expense History</h3></div>
+          <div class="table-wrap"><table class="data" id="expenses-table">
+            <thead><tr><th>Date</th><th>Name</th><th>Amount</th><th>Notes</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- EMPLOYEES ---------------- -->
+    <section class="view view-hidden" id="view-employees">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Add Employee</h3></div>
+          <form id="form-employee">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Employee Name</label><input type="text" id="emp-name" required></div>
+              <div class="field"><label>Monthly Salary (₹)</label><input type="number" step="0.01" min="0" id="emp-salary" required></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Save Employee</button></div>
+          </form>
+          <div class="callout" style="margin-top:14px;"><i class="fa-solid fa-circle-info"></i><div>Daily salary = Monthly Salary ÷ 30, applied automatically to every day's profit calculation.</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Employees</h3><span class="hint" id="emp-total-hint"></span></div>
+          <div class="table-wrap"><table class="data" id="employees-table">
+            <thead><tr><th>Name</th><th>Monthly Salary</th><th>Daily Salary</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- REPORTS ---------------- -->
+    <section class="view view-hidden" id="view-reports">
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-title"><h3>Generate Report</h3></div>
+        <div class="form-grid cols-3">
+          <div class="field"><label>Report Type</label>
+            <select id="report-type">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly (last 7 days)</option>
+              <option value="15day">15 Days</option>
+              <option value="monthly">Monthly (last 30 days)</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+          <div class="field" id="report-date-wrap"><label>Date</label><input type="date" id="report-date"></div>
+          <div class="field" id="report-start-wrap" style="display:none;"><label>Start Date</label><input type="date" id="report-start"></div>
+          <div class="field" id="report-end-wrap" style="display:none;"><label>End Date</label><input type="date" id="report-end"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-accent" id="btn-generate-report"><i class="fa-solid fa-file-pdf"></i>Generate PDF Report</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><h3>Report Log</h3></div>
+        <div class="table-wrap"><table class="data" id="reports-table">
+          <thead><tr><th>Type</th><th>Period</th><th>Generated On</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ---------------- SETTINGS ---------------- -->
+    <section class="view view-hidden" id="view-settings">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-title"><h3>Restaurant &amp; Rent</h3></div>
+          <form id="form-settings">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Restaurant Name</label><input type="text" id="set-name" value="Kalaburagi Khanavali"></div>
+              <div class="field"><label>Monthly Rent (₹)</label><input type="number" step="0.01" min="0" id="set-rent"></div>
+              <div class="field"><label>Default Low Stock Threshold</label><input type="number" step="0.01" min="0" id="set-threshold" value="5"></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Save Settings</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <div class="card-title"><h3>Google Sheets Connection</h3></div>
+          <div class="callout warn" style="margin-bottom:14px;"><i class="fa-solid fa-triangle-exclamation"></i><div>Create a Google Cloud project, enable the <strong>Google Sheets API</strong>, and generate an <strong>API key</strong> and an <strong>OAuth 2.0 Client ID</strong> (Web application, with this page's URL as an authorized origin). Paste them below along with your target Spreadsheet ID.</div></div>
+          <form id="form-gconfig">
+            <div class="form-grid cols-1">
+              <div class="field"><label>Google API Key</label><input type="text" id="cfg-apikey" placeholder="AIza..."></div>
+              <div class="field"><label>OAuth Client ID</label><input type="text" id="cfg-clientid" placeholder="xxxx.apps.googleusercontent.com"></div>
+              <div class="field"><label>Spreadsheet ID</label><input type="text" id="cfg-sheetid" placeholder="From the Sheet's URL"></div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" id="btn-init-sheets"><i class="fa-solid fa-layer-group"></i>Create Sheet Tabs</button>
+              <button type="submit" class="btn btn-primary">Save Connection</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px;">
+        <div class="card-title"><h3>Local Data</h3></div>
+        <div class="callout"><i class="fa-solid fa-database"></i><div>All data is cached in this browser for speed and offline use, and synced to Google Sheets when connected. Use Export/Import to move data between devices.</div></div>
+        <div class="form-actions" style="justify-content:flex-start; margin-top:14px;">
+          <button class="btn btn-ghost btn-sm" id="btn-export"><i class="fa-solid fa-download"></i>Export JSON</button>
+          <button class="btn btn-ghost btn-sm" id="btn-import"><i class="fa-solid fa-upload"></i>Import JSON</button>
+          <input type="file" id="file-import" accept="application/json" style="display:none;">
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">Kalaburagi Khanavali &middot; Restaurant Manager &middot; Built for daily kitchen-floor use</footer>
+  </div>
+</div>
+
+<!-- ============================================================
+     MOBILE APP-STYLE BOTTOM NAVIGATION
+     ============================================================ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bn-item" data-view="dashboard"><span class="bn-pill"><i class="fa-solid fa-gauge-high"></i></span>Home</button>
+    <button class="bn-item" data-view="inventory"><span class="bn-pill"><i class="fa-solid fa-boxes-stacked"></i></span>Stock</button>
+    <button class="bn-item" data-view="sales"><span class="bn-pill"><i class="fa-solid fa-cash-register"></i></span>Sales</button>
+    <button class="bn-item" data-view="expenses"><span class="bn-pill"><i class="fa-solid fa-receipt"></i></span>Expenses</button>
+    <button class="bn-item" id="bn-more"><span class="bn-pill"><i class="fa-solid fa-ellipsis"></i></span>More</button>
+  </div>
+</nav>
+
+<button class="fab" id="fab-quick-add" title="Quick add"><i class="fa-solid fa-plus"></i></button>
+
+<!-- ============================================================
+     MODALS
+     ============================================================ -->
+<div class="modal-overlay hidden" id="modal-purchase">
+  <div class="modal">
+    <div class="modal-head"><h3>Record Grocery Purchase</h3><button class="modal-close" data-close="modal-purchase">&times;</button></div>
+    <form id="form-purchase">
+      <div class="form-grid cols-1">
+        <div class="form-grid cols-2">
+          <div class="field"><label>Item Name</label><input type="text" id="pur-name" list="item-suggestions" required></div>
+          <div class="field"><label>Category</label>
+            <select id="pur-category">
+              <option>Grains</option><option>Dal / Pulses</option><option>Flour</option><option>Oil</option>
+              <option>Spices</option><option>Vegetables</option><option>Dairy</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <datalist id="item-suggestions"></datalist>
+        <div class="form-grid cols-3">
+          <div class="field"><label>Unit</label>
+            <select id="pur-unit"><option>kg</option><option>g</option><option>litre</option><option>ml</option><option>pcs</option><option>packet</option></select>
+          </div>
+          <div class="field"><label>Purchased Qty</label><input type="number" step="0.01" min="0.01" id="pur-qty" required></div>
+          <div class="field"><label>Purchase Price (₹, total)</label><input type="number" step="0.01" min="0" id="pur-price" required></div>
+        </div>
+        <div class="form-grid cols-2">
+          <div class="field"><label>Purchase Date</label><input type="date" id="pur-date" required></div>
+          <div class="field"><label>Cost / Unit</label><input type="text" id="pur-costunit" readonly></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" data-close="modal-purchase">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Purchase</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-stack"></div>
+
+<script>
+/* ================================================================
+   SECTION 1 — CONSTANTS, STATE & LOCAL PERSISTENCE
+   ================================================================ */
+const SHEET_NAMES = {
+  inventory: 'Inventory',
+  usage: 'InventoryUsage',
+  sales: 'DailySales',
+  expenses: 'DailyExpenses',
+  employees: 'Employees',
+  settings: 'Settings',
+  reports: 'Reports'
+};
+
+const SHEET_HEADERS = {
+  Inventory:       ['ID','ItemName','Category','Unit','PurchasedQty','PurchasePrice','PurchaseDate','RemainingQty','CostPerUnit'],
+  InventoryUsage:  ['ID','Date','ItemName','QtyUsed','TotalCost','Notes'],
+  DailySales:      ['ID','Date','Cash','UPI'],
+  DailyExpenses:   ['ID','Date','Name','Amount','Notes'],
+  Employees:       ['ID','Name','MonthlySalary'],
+  Settings:        ['Key','Value'],
+  Reports:         ['ID','Type','StartDate','EndDate','GeneratedOn']
+};
+
+const LS_CONFIG = 'kk_rms_config_v1';
+const LS_CACHE  = 'kk_rms_cache_v1';
+
+let CONFIG = { apiKey:'', clientId:'', spreadsheetId:'' };
+
+let STATE = {
+  inventory: [],   // purchase batches {rowIndex, ID, ItemName, Category, Unit, PurchasedQty, PurchasePrice, PurchaseDate, RemainingQty, CostPerUnit}
+  usage: [],       // {rowIndex, ID, Date, ItemName, QtyUsed, TotalCost, Notes}
+  sales: [],       // {rowIndex, ID, Date, Cash, UPI}
+  expenses: [],    // {rowIndex, ID, Date, Name, Amount, Notes}
+  employees: [],   // {rowIndex, ID, Name, MonthlySalary}
+  settings: {},    // key/value map, incl rowIndex map internally under __rows
+  reports: []      // {rowIndex, ID, Type, StartDate, EndDate, GeneratedOn}
+};
+
+let charts = {}; // active Chart.js instances
+let accessToken = null;
+let tokenClient = null;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function money(n){
+  n = Number(n)||0;
+  return '₹' + n.toLocaleString('en-IN', {maximumFractionDigits:2, minimumFractionDigits:0});
+}
+function fmtDate(d){
+  if(!d) return '';
+  const dt = new Date(d);
+  if(isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+function daysAgoStr(n){
+  const d = new Date(); d.setDate(d.getDate()-n);
+  return d.toISOString().slice(0,10);
+}
+
+function loadConfig(){
+  try{ CONFIG = Object.assign(CONFIG, JSON.parse(localStorage.getItem(LS_CONFIG)||'{}')); }catch(e){}
+}
+function saveConfig(){ localStorage.setItem(LS_CONFIG, JSON.stringify(CONFIG)); }
+
+function loadCache(){
+  try{
+    const c = JSON.parse(localStorage.getItem(LS_CACHE)||'null');
+    if(c) STATE = Object.assign(STATE, c);
+  }catch(e){}
+}
+function saveCache(){ localStorage.setItem(LS_CACHE, JSON.stringify(STATE)); }
+
+/* ================================================================
+   SECTION 2 — TOASTS
+   ================================================================ */
+function toast(msg, type='info'){
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type==='info'?'':type);
+  const icon = type==='success' ? 'fa-circle-check' : type==='error' ? 'fa-circle-exclamation' : type==='warn' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+  el.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+  stack.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3400);
+}
+
+/* ================================================================
+   SECTION 3 — GOOGLE SHEETS API LAYER
+   (Google Identity Services for OAuth token + raw fetch to Sheets API v4)
+   ================================================================ */
+function sheetsConfigured(){
+  return !!(CONFIG.apiKey && CONFIG.clientId && CONFIG.spreadsheetId);
+}
+
+function updateSyncPill(){
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if(!sheetsConfigured()){
+    dot.className='dot off'; label.textContent='Sheets not configured';
+  } else if(accessToken){
+    dot.className='dot on'; label.textContent='Synced with Google Sheets';
+  } else {
+    dot.className='dot off'; label.textContent='Sign in to sync';
+  }
+}
+
+function initGIS(){
+  if(!window.google || !google.accounts || !sheetsConfigured()) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.clientId,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: (resp)=>{
+      if(resp.error){ toast('Google sign-in failed: '+resp.error, 'error'); return; }
+      accessToken = resp.access_token;
+      updateSyncPill();
+      toast('Connected to Google Sheets', 'success');
+      loadAllFromSheets();
+    }
+  });
+}
+
+function requestSignIn(){
+  if(!sheetsConfigured()){ toast('Add your API Key, Client ID and Spreadsheet ID in Settings first', 'warn'); switchView('settings'); return; }
+  if(!tokenClient) initGIS();
+  if(tokenClient) tokenClient.requestAccessToken({prompt: accessToken ? '' : 'consent'});
+}
+
+async function sheetsFetch(path, opts={}){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}${path}${path.includes('?')?'&':'?'}key=${CONFIG.apiKey}`;
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+  const res = await fetch(url, Object.assign({}, opts, {headers}));
+  if(!res.ok){
+    const errBody = await res.text();
+    throw new Error(`Sheets API ${res.status}: ${errBody.slice(0,200)}`);
+  }
+  return res.json();
+}
+
+async function ensureSheetTabs(){
+  if(!sheetsConfigured() || !accessToken){ toast('Connect to Google Sheets first', 'warn'); return; }
+  try{
+    const meta = await sheetsFetch('');
+    const existing = new Set(meta.sheets.map(s=>s.properties.title));
+    const requests = [];
+    Object.values(SHEET_NAMES).forEach(name=>{
+      if(!existing.has(name)) requests.push({addSheet:{properties:{title:name}}});
+    });
+    if(requests.length){
+      await sheetsFetch(':batchUpdate', {method:'POST', body:JSON.stringify({requests})});
+    }
+    // write headers
+    for(const name of Object.values(SHEET_NAMES)){
+      await sheetsFetch(`/values/${encodeURIComponent(name+'!A1')}?valueInputOption=USER_ENTERED`, {
+        method:'PUT', body: JSON.stringify({values:[SHEET_HEADERS[name]]})
+      });
+    }
+    toast('Sheet tabs are ready', 'success');
+  }catch(e){
+    console.error(e); toast('Could not create sheet tabs: '+e.message, 'error');
+  }
+}
+
+async function readSheet(name){
+  const data = await sheetsFetch(`/values/${encodeURIComponent(name)}!A2:Z10000`);
+  return data.values || [];
+}
+
+async function appendRow(name, rowArray){
+  if(accessToken){
+    await sheetsFetch(`/values/${encodeURIComponent(name)}!A:Z:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+      method:'POST', body: JSON.stringify({values:[rowArray]})
+    });
+  }
+}
+async function updateRowAt(name, rowIndex, rowArray){
+  // rowIndex is 1-based sheet row number (2 = first data row)
+  if(accessToken){
+    await sheetsFetch(`/values/${encodeURIComponent(name)}!A${rowIndex}:Z${rowIndex}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', body: JSON.stringify({values:[rowArray]})
+    });
+  }
+}
+
+function rowToObj(headers, row){
+  const o = {};
+  headers.forEach((h,i)=> o[h] = row[i] !== undefined ? row[i] : '');
+  return o;
+}
+function objToRow(headers, obj){
+  return headers.map(h => obj[h] !== undefined ? obj[h] : '');
+}
+
+async function loadAllFromSheets(){
+  if(!sheetsConfigured() || !accessToken){ renderAll(); return; }
+  try{
+    const [inv, usage, sales, exp, emp, set, rep] = await Promise.all([
+      readSheet(SHEET_NAMES.inventory), readSheet(SHEET_NAMES.usage), readSheet(SHEET_NAMES.sales),
+      readSheet(SHEET_NAMES.expenses), readSheet(SHEET_NAMES.employees), readSheet(SHEET_NAMES.settings),
+      readSheet(SHEET_NAMES.reports)
+    ]);
+    STATE.inventory = inv.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.Inventory, r)));
+    STATE.usage     = usage.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.InventoryUsage, r)));
+    STATE.sales     = sales.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.DailySales, r)));
+    STATE.expenses  = exp.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.DailyExpenses, r)));
+    STATE.employees = emp.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.Employees, r)));
+    STATE.reports   = rep.map((r,i)=> Object.assign({rowIndex:i+2}, rowToObj(SHEET_HEADERS.Reports, r)));
+    STATE.settings = {};
+    set.forEach((r,i)=>{ STATE.settings[r[0]] = {value:r[1], rowIndex:i+2}; });
+    saveCache();
+    renderAll();
+    toast('Data loaded from Google Sheets', 'success');
+  }catch(e){
+    console.error(e); toast('Failed to load from Sheets — using local cache. '+e.message, 'error');
+    renderAll();
+  }
+}
+
+async function settingGet(key, fallback=''){
+  return STATE.settings[key] ? STATE.settings[key].value : fallback;
+}
+async function settingSet(key, value){
+  STATE.settings[key] = STATE.settings[key] || {};
+  const existed = STATE.settings[key].rowIndex;
+  STATE.settings[key].value = value;
+  saveCache();
+  if(accessToken && sheetsConfigured()){
+    try{
+      if(existed){
+        await updateRowAt(SHEET_NAMES.settings, existed, [key, value]);
+      } else {
+        await appendRow(SHEET_NAMES.settings, [key, value]);
+        // approximate new rowIndex (append at end); safe fallback re-sync on next load
+        STATE.settings[key].rowIndex = STATE.settings[key].rowIndex || (Object.keys(STATE.settings).length + 1);
+      }
+    }catch(e){ console.error(e); toast('Sheet sync failed for settings', 'warn'); }
+  }
+}
+
+/* ================================================================
+   SECTION 4 — INVENTORY & CONSUMPTION LOGIC (FIFO)
+   ================================================================ */
+function aggregatedInventory(){
+  const map = {};
+  STATE.inventory.forEach(b=>{
+    const key = (b.ItemName||'').trim().toLowerCase();
+    if(!key) return;
+    if(!map[key]) map[key] = {ItemName:b.ItemName, Category:b.Category, Unit:b.Unit, Remaining:0};
+    map[key].Remaining += Number(b.RemainingQty)||0;
+  });
+  return Object.values(map);
+}
+
+function batchesForItem(itemName){
+  return STATE.inventory
+    .filter(b => (b.ItemName||'').trim().toLowerCase() === (itemName||'').trim().toLowerCase())
+    .sort((a,b)=> new Date(a.PurchaseDate) - new Date(b.PurchaseDate));
+}
+
+async function recordPurchase({ItemName, Category, Unit, PurchasedQty, PurchasePrice, PurchaseDate}){
+  const qty = Number(PurchasedQty), price = Number(PurchasePrice);
+  const costPerUnit = qty > 0 ? (price / qty) : 0;
+  const batch = {
+    ID: uid(), ItemName: ItemName.trim(), Category, Unit,
+    PurchasedQty: qty, PurchasePrice: price, PurchaseDate,
+    RemainingQty: qty, CostPerUnit: Number(costPerUnit.toFixed(4))
+  };
+  STATE.inventory.push(batch);
+  saveCache();
+  try{ await appendRow(SHEET_NAMES.inventory, objToRow(SHEET_HEADERS.Inventory, batch)); }
+  catch(e){ console.error(e); toast('Saved locally; Sheets sync failed', 'warn'); }
+  return batch;
+}
+
+async function recordConsumption({ItemName, Date: dateStr, QtyUsed, Notes}){
+  let remainingToConsume = Number(QtyUsed);
+  if(remainingToConsume <= 0) throw new Error('Quantity must be greater than zero');
+  const batches = batchesForItem(ItemName).filter(b => Number(b.RemainingQty) > 0);
+  const totalAvailable = batches.reduce((s,b)=> s + Number(b.RemainingQty), 0);
+  if(remainingToConsume > totalAvailable + 1e-9){
+    throw new Error(`Only ${totalAvailable} available in stock for ${ItemName}`);
+  }
+  let totalCost = 0;
+  for(const batch of batches){
+    if(remainingToConsume <= 0) break;
+    const take = Math.min(Number(batch.RemainingQty), remainingToConsume);
+    const cost = take * Number(batch.CostPerUnit);
+    totalCost += cost;
+    batch.RemainingQty = Number((Number(batch.RemainingQty) - take).toFixed(4));
+    remainingToConsume = Number((remainingToConsume - take).toFixed(4));
+    try{ await updateRowAt(SHEET_NAMES.inventory, batch.rowIndex, objToRow(SHEET_HEADERS.Inventory, batch)); }
+    catch(e){ console.error(e); }
+  }
+  const usageRow = { ID: uid(), Date: dateStr, ItemName: ItemName.trim(), QtyUsed: Number(QtyUsed), TotalCost: Number(totalCost.toFixed(2)), Notes: Notes||'' };
+  STATE.usage.push(usageRow);
+  saveCache();
+  try{ await appendRow(SHEET_NAMES.usage, objToRow(SHEET_HEADERS.InventoryUsage, usageRow)); }
+  catch(e){ console.error(e); toast('Saved locally; Sheets sync failed', 'warn'); }
+  return usageRow;
+}
+
+/* ================================================================
+   SECTION 5 — DAILY AGGREGATES & PROFIT ENGINE
+   ================================================================ */
+function sumFor(list, dateField, dateStr, valueFn){
+  return list.filter(r => r[dateField] === dateStr).reduce((s,r)=> s + valueFn(r), 0);
+}
+
+function dailySalesTotal(dateStr){ return sumFor(STATE.sales, 'Date', dateStr, r=> (Number(r.Cash)||0)+(Number(r.UPI)||0)); }
+function dailyCashUpi(dateStr){
+  const cash = sumFor(STATE.sales, 'Date', dateStr, r=> Number(r.Cash)||0);
+  const upi  = sumFor(STATE.sales, 'Date', dateStr, r=> Number(r.UPI)||0);
+  return {cash, upi};
+}
+function dailyConsumptionCost(dateStr){ return sumFor(STATE.usage, 'Date', dateStr, r=> Number(r.TotalCost)||0); }
+function dailyExpensesTotal(dateStr){ return sumFor(STATE.expenses, 'Date', dateStr, r=> Number(r.Amount)||0); }
+function dailySalaryTotal(){ return STATE.employees.reduce((s,e)=> s + (Number(e.MonthlySalary)||0)/30, 0); }
+async function dailyRentAmount(){ const rent = Number(await settingGet('MonthlyRent', 0)) || 0; return rent/30; }
+
+let cachedDailyRent = 0;
+function dailyRentSync(){ return cachedDailyRent; }
+
+async function refreshDerivedCaches(){
+  cachedDailyRent = await dailyRentAmount();
+}
+
+function dailyProfit(dateStr){
+  const sales = dailySalesTotal(dateStr);
+  const cons = dailyConsumptionCost(dateStr);
+  const exp = dailyExpensesTotal(dateStr);
+  const sal = dailySalaryTotal();
+  const rent = dailyRentSync();
+  return sales - cons - exp - sal - rent;
+}
+
+function trailingProfit(days){
+  let total = 0;
+  for(let i=0;i<days;i++){ total += dailyProfit(daysAgoStr(i)); }
+  return total;
+}
+
+/* ================================================================
+   SECTION 6 — RENDERING: DASHBOARD
+   ================================================================ */
+function renderDashboard(){
+  const today = todayStr();
+  const {cash, upi} = dailyCashUpi(today);
+  const salesToday = cash+upi;
+  const consToday = dailyConsumptionCost(today);
+  const expToday = dailyExpensesTotal(today);
+  const profitToday = dailyProfit(today);
+
+  document.getElementById('kpi-sales').textContent = money(salesToday);
+  document.getElementById('kpi-sales-sub').textContent = `Cash ${money(cash)} · UPI ${money(upi)}`;
+  document.getElementById('kpi-consumption').textContent = money(consToday);
+  document.getElementById('kpi-expenses').textContent = money(expToday);
+  const profitEl = document.getElementById('kpi-profit');
+  profitEl.textContent = money(profitToday);
+  profitEl.style.color = profitToday >= 0 ? 'var(--good)' : 'var(--bad)';
+  document.getElementById('kpi-profit-sub').innerHTML = profitToday>=0
+    ? `<span class="badge badge-good"><i class="fa-solid fa-arrow-up"></i>Profitable day</span>`
+    : `<span class="badge badge-bad"><i class="fa-solid fa-arrow-down"></i>Loss today</span>`;
+
+  document.getElementById('kpi-week').textContent = money(trailingProfit(7));
+  document.getElementById('kpi-15').textContent = money(trailingProfit(15));
+  document.getElementById('kpi-month').textContent = money(trailingProfit(30));
+
+  renderProfitTrendChart();
+  renderExpenseSplitChart(today);
+  renderSalesMixChart();
+  renderLowStock();
+}
+
+function renderProfitTrendChart(){
+  const labels = [], data = [];
+  for(let i=29;i>=0;i--){ labels.push(fmtDate(daysAgoStr(i))); data.push(Number(dailyProfit(daysAgoStr(i)).toFixed(2))); }
+  const ctx = document.getElementById('chart-profit-trend');
+  if(charts.trend) charts.trend.destroy();
+  charts.trend = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[{ label:'Daily Profit (₹)', data, borderColor:'#C89B3C', backgroundColor:'rgba(200,155,60,0.15)', tension:0.35, fill:true, pointRadius:0, borderWidth:2.5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ ticks:{maxTicksLimit:8, color:'#8A7460'}, grid:{display:false} }, y:{ ticks:{color:'#8A7460'}, grid:{color:'#EADFC6'} } } }
+  });
+}
+
+function renderExpenseSplitChart(dateStr){
+  const map = {};
+  STATE.expenses.filter(e=>e.Date===dateStr).forEach(e=>{ map[e.Name] = (map[e.Name]||0) + Number(e.Amount||0); });
+  const cons = dailyConsumptionCost(dateStr);
+  if(cons>0) map['Grocery Consumption'] = (map['Grocery Consumption']||0) + cons;
+  const sal = dailySalaryTotal(); if(sal>0) map['Salary'] = (map['Salary']||0)+sal;
+  const rent = dailyRentSync(); if(rent>0) map['Rent'] = (map['Rent']||0)+rent;
+  const labels = Object.keys(map), data = Object.values(map);
+  const palette = ['#5C4033','#C89B3C','#8A7460','#B0452E','#3F7D4F','#9C7A22','#E7CE93','#3E2723'];
+  const ctx = document.getElementById('chart-expense-split');
+  if(charts.split) charts.split.destroy();
+  if(labels.length===0){ ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height); return; }
+  charts.split = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor: palette }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{color:'#3E2723', boxWidth:12, font:{size:11}} } } }
+  });
+}
+
+function renderSalesMixChart(){
+  const labels=[], cashD=[], upiD=[];
+  for(let i=6;i>=0;i--){ const d=daysAgoStr(i); labels.push(fmtDate(d)); const c=dailyCashUpi(d); cashD.push(c.cash); upiD.push(c.upi); }
+  const ctx = document.getElementById('chart-sales-mix');
+  if(charts.mix) charts.mix.destroy();
+  charts.mix = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Cash', data:cashD, backgroundColor:'#5C4033', borderRadius:5},
+      {label:'UPI', data:upiD, backgroundColor:'#C89B3C', borderRadius:5}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{stacked:true, grid:{display:false}, ticks:{color:'#8A7460'}}, y:{stacked:true, grid:{color:'#EADFC6'}, ticks:{color:'#8A7460'}} }, plugins:{legend:{position:'bottom', labels:{color:'#3E2723'}}} }
+  });
+}
+
+async function renderLowStock(){
+  const threshold = Number(await settingGet('DefaultThreshold', 5)) || 5;
+  const agg = aggregatedInventory().filter(i => i.Remaining <= threshold);
+  const list = document.getElementById('low-stock-list');
+  document.getElementById('low-stock-count').textContent = agg.length + ' item' + (agg.length===1?'':'s');
+  if(agg.length===0){ list.innerHTML = '<div class="callout"><i class="fa-solid fa-circle-check"></i><div>All stock levels look healthy.</div></div>'; return; }
+  list.innerHTML = agg.map(i=>`
+    <div class="callout danger" style="margin-bottom:8px;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div><strong>${i.ItemName}</strong> — ${i.Remaining} ${i.Unit} remaining. Consider restocking soon.</div>
+    </div>`).join('');
+}
+
+/* ================================================================
+   SECTION 7 — RENDERING: INVENTORY
+   ================================================================ */
+async function renderInventory(){
+  const threshold = Number(await settingGet('DefaultThreshold', 5)) || 5;
+  const search = (document.getElementById('inv-search').value||'').toLowerCase();
+  const agg = aggregatedInventory().filter(i => !search || i.ItemName.toLowerCase().includes(search) || (i.Category||'').toLowerCase().includes(search));
+  const maxRemaining = Math.max(1, ...agg.map(i=>i.Remaining));
+  const aggBody = document.getElementById('inv-agg-table').querySelector('tbody');
+  aggBody.innerHTML = agg.length ? agg.map(i=>{
+    const pct = Math.min(100, (i.Remaining/maxRemaining)*100);
+    const low = i.Remaining <= threshold;
+    return `<tr>
+      <td><strong>${i.ItemName}</strong></td><td>${i.Category||'—'}</td><td>${i.Unit||'—'}</td>
+      <td>${i.Remaining} ${i.Unit||''}</td>
+      <td><div class="stock-bar ${low?'low':''}"><span style="width:${pct}%"></span></div></td>
+      <td>${low ? '<span class="badge badge-bad">Low Stock</span>' : '<span class="badge badge-good">OK</span>'}</td>
+    </tr>`;
+  }).join('') : `<tr class="empty-row"><td colspan="6">No inventory items yet. Record a purchase to get started.</td></tr>`;
+
+  const batches = STATE.inventory.filter(b => !search || (b.ItemName||'').toLowerCase().includes(search) || (b.Category||'').toLowerCase().includes(search))
+    .sort((a,b)=> new Date(b.PurchaseDate) - new Date(a.PurchaseDate));
+  const batchBody = document.getElementById('inv-batch-table').querySelector('tbody');
+  batchBody.innerHTML = batches.length ? batches.map(b=>`
+    <tr>
+      <td>${b.ItemName}</td><td>${b.Category||'—'}</td><td>${b.Unit||'—'}</td>
+      <td>${b.PurchasedQty}</td><td>${money(b.PurchasePrice)}</td><td>${money(b.CostPerUnit)}</td>
+      <td>${fmtDate(b.PurchaseDate)}</td><td>${Number(b.RemainingQty).toFixed(2)}</td>
+      <td><span class="badge ${Number(b.RemainingQty)>0 ? 'badge-good':'badge-warn'}">${Number(b.RemainingQty)>0?'Active':'Depleted'}</span></td>
+    </tr>`).join('') : `<tr class="empty-row"><td colspan="9">No purchase batches recorded yet.</td></tr>`;
+
+  document.getElementById('inv-agg-hint').textContent = agg.length + ' distinct items tracked';
+
+  // populate item suggestions and consumption select
+  const names = [...new Set(STATE.inventory.map(b=>b.ItemName))];
+  document.getElementById('item-suggestions').innerHTML = names.map(n=>`<option value="${n}">`).join('');
+  const consSelect = document.getElementById('cons-item');
+  const prevVal = consSelect.value;
+  consSelect.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('') || '<option value="">No items yet</option>';
+  if(names.includes(prevVal)) consSelect.value = prevVal;
+  updateConsAvailable();
+}
+
+function updateConsAvailable(){
+  const item = document.getElementById('cons-item').value;
+  const total = batchesForItem(item).reduce((s,b)=> s + Number(b.RemainingQty), 0);
+  document.getElementById('cons-available').value = total ? total.toFixed(2) : '0';
+}
+
+/* ================================================================
+   SECTION 8 — RENDERING: CONSUMPTION / SALES / EXPENSES / EMPLOYEES
+   ================================================================ */
+function renderConsumptionTable(){
+  const rows = [...STATE.usage].sort((a,b)=> new Date(b.Date)-new Date(a.Date)).slice(0,200);
+  const body = document.getElementById('cons-table').querySelector('tbody');
+  body.innerHTML = rows.length ? rows.map(r=>`
+    <tr><td>${fmtDate(r.Date)}</td><td>${r.ItemName}</td><td>${r.QtyUsed}</td><td>${money(r.TotalCost)}</td><td>${r.Notes||'—'}</td></tr>
+  `).join('') : `<tr class="empty-row"><td colspan="5">No consumption logged yet.</td></tr>`;
+}
+
+function renderSalesTable(){
+  const rows = [...STATE.sales].sort((a,b)=> new Date(b.Date)-new Date(a.Date));
+  const body = document.getElementById('sales-table').querySelector('tbody');
+  body.innerHTML = rows.length ? rows.map(r=>`
+    <tr><td>${fmtDate(r.Date)}</td><td>${money(r.Cash)}</td><td>${money(r.UPI)}</td><td>${money(Number(r.Cash)+Number(r.UPI))}</td>
+    <td class="row-actions"><button class="mini-btn danger" data-del-sale="${r.rowIndex}" data-id="${r.ID}"><i class="fa-solid fa-trash"></i></button></td></tr>
+  `).join('') : `<tr class="empty-row"><td colspan="5">No sales recorded yet.</td></tr>`;
+}
+
+function renderExpensesTable(){
+  const rows = [...STATE.expenses].sort((a,b)=> new Date(b.Date)-new Date(a.Date));
+  const body = document.getElementById('expenses-table').querySelector('tbody');
+  body.innerHTML = rows.length ? rows.map(r=>`
+    <tr><td>${fmtDate(r.Date)}</td><td>${r.Name}</td><td>${money(r.Amount)}</td><td>${r.Notes||'—'}</td>
+    <td class="row-actions"><button class="mini-btn danger" data-del-exp="${r.rowIndex}" data-id="${r.ID}"><i class="fa-solid fa-trash"></i></button></td></tr>
+  `).join('') : `<tr class="empty-row"><td colspan="5">No expenses recorded yet.</td></tr>`;
+}
+
+function renderEmployeesTable(){
+  const rows = STATE.employees;
+  const body = document.getElementById('employees-table').querySelector('tbody');
+  body.innerHTML = rows.length ? rows.map(r=>`
+    <tr><td>${r.Name}</td><td>${money(r.MonthlySalary)}</td><td>${money(Number(r.MonthlySalary)/30)}</td>
+    <td class="row-actions"><button class="mini-btn danger" data-del-emp="${r.rowIndex}" data-id="${r.ID}"><i class="fa-solid fa-trash"></i></button></td></tr>
+  `).join('') : `<tr class="empty-row"><td colspan="4">No employees added yet.</td></tr>`;
+  document.getElementById('emp-total-hint').textContent = rows.length + ' employee' + (rows.length===1?'':'s') + ' · ' + money(dailySalaryTotal()) + '/day total';
+}
+
+function renderReportsTable(){
+  const rows = [...STATE.reports].sort((a,b)=> new Date(b.GeneratedOn)-new Date(a.GeneratedOn));
+  const body = document.getElementById('reports-table').querySelector('tbody');
+  body.innerHTML = rows.length ? rows.map(r=>`
+    <tr><td>${r.Type}</td><td>${fmtDate(r.StartDate)} – ${fmtDate(r.EndDate)}</td><td>${fmtDate(r.GeneratedOn)}</td></tr>
+  `).join('') : `<tr class="empty-row"><td colspan="3">No reports generated yet.</td></tr>`;
+}
+
+/* ================================================================
+   SECTION 9 — MASTER RENDER
+   ================================================================ */
+async function renderAll(){
+  await refreshDerivedCaches();
+  renderDashboard();
+  await renderInventory();
+  renderConsumptionTable();
+  renderSalesTable();
+  renderExpensesTable();
+  renderEmployeesTable();
+  renderReportsTable();
+  // reflect settings form
+  document.getElementById('set-name').value = STATE.settings.RestaurantName ? STATE.settings.RestaurantName.value : 'Kalaburagi Khanavali';
+  document.getElementById('set-rent').value = STATE.settings.MonthlyRent ? STATE.settings.MonthlyRent.value : '';
+  document.getElementById('set-threshold').value = STATE.settings.DefaultThreshold ? STATE.settings.DefaultThreshold.value : 5;
+}
+
+/* ================================================================
+   SECTION 10 — NAVIGATION
+   ================================================================ */
+const VIEW_META = {
+  dashboard:{title:'Dashboard', sub:"Today's snapshot of the restaurant"},
+  inventory:{title:'Inventory', sub:'Track groceries purchased and remaining stock'},
+  consumption:{title:'Consumption', sub:'Log daily grocery usage — FIFO cost applied automatically'},
+  sales:{title:'Daily Sales', sub:'Record cash and UPI collections each day'},
+  expenses:{title:'Expenses', sub:'Log day-to-day running costs'},
+  employees:{title:'Employees', sub:'Manage staff and monthly salaries'},
+  reports:{title:'Reports', sub:'Generate printable PDF accounting reports'},
+  settings:{title:'Settings', sub:'Rent, thresholds and Google Sheets connection'}
+};
+
+const BOTTOM_NAV_VIEWS = new Set(['dashboard','inventory','sales','expenses']);
+const FAB_CONFIG = {
+  inventory:  {icon:'fa-cart-plus', action:()=> document.getElementById('modal-purchase').classList.remove('hidden')},
+  consumption:{icon:'fa-fire-burner', action:()=> focusForm('form-consumption','cons-qty')},
+  sales:      {icon:'fa-cash-register', action:()=> focusForm('form-sales','sale-cash')},
+  expenses:   {icon:'fa-receipt', action:()=> focusForm('form-expense','exp-amount')},
+  employees:  {icon:'fa-user-plus', action:()=> focusForm('form-employee','emp-name')}
+};
+function focusForm(formId, fieldId){
+  document.getElementById(formId).scrollIntoView({behavior:'smooth', block:'start'});
+  setTimeout(()=> document.getElementById(fieldId).focus(), 350);
+}
+
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=> v.classList.add('view-hidden'));
+  document.getElementById('view-'+view).classList.remove('view-hidden');
+  document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.view===view));
+  document.querySelectorAll('.bn-item[data-view]').forEach(n=> n.classList.toggle('active', n.dataset.view===view));
+  document.getElementById('bn-more').classList.toggle('active', !BOTTOM_NAV_VIEWS.has(view));
+  document.getElementById('view-title').textContent = VIEW_META[view].title;
+  document.getElementById('view-sub').textContent = VIEW_META[view].sub;
+
+  const fab = document.getElementById('fab-quick-add');
+  const cfg = FAB_CONFIG[view];
+  if(cfg){
+    fab.classList.add('show');
+    fab.innerHTML = `<i class="fa-solid ${cfg.icon}"></i>`;
+    fab.onclick = cfg.action;
+  } else {
+    fab.classList.remove('show');
+    fab.onclick = null;
+  }
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+}
+
+/* ================================================================
+   SECTION 11 — PDF REPORT GENERATION
+   ================================================================ */
+function dateRangeArray(start, end){
+  const arr = []; let d = new Date(start); const endD = new Date(end);
+  while(d <= endD){ arr.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); }
+  return arr;
+}
+
+// Plain-money formatter for the PDF (no ₹ glyph — Times New Roman/PDF standard
+// fonts don't render the Rupee glyph reliably, so GST-style reports use "Rs.")
+function moneyPlain(n){
+  n = Number(n)||0;
+  return 'Rs. ' + n.toLocaleString('en-IN', {maximumFractionDigits:2, minimumFractionDigits:2});
+}
+
+// Rows whose amount cell should get the yellow-highlighter treatment
+const HIGHLIGHT_LABELS = new Set([
+  'Total Sales (Cash + UPI)', 'Total Grocery Consumption', 'Total Other Expenses',
+  'Total Salary + Rent', 'NET PROFIT / (LOSS)'
+]);
+
+// Keeps breakdown tables bounded so the report always fits one A4 page,
+// no matter how many grocery items / expense categories accumulate over time.
+function capRows(rows, max, amountColIndex, otherLabel){
+  if(rows.length <= max) return rows;
+  const kept = rows.slice(0, max);
+  const rest = rows.slice(max);
+  const restTotal = amountColIndex!=null ? rest.reduce((s,r)=>{
+    const raw = String(r[amountColIndex]).replace(/[^0-9.\-]/g,''); return s + (Number(raw)||0);
+  }, 0) : null;
+  const summaryRow = kept[0].map((_,i)=> i===0 ? ('+ ' + rest.length + ' more ' + otherLabel) : (i===amountColIndex ? moneyPlain(restTotal) : ''));
+  kept.push(summaryRow);
+  return kept;
+}
+
+function highlightAmountCells(data){
+  // jspdf-autotable didParseCell hook: highlight only the amount column
+  // for specific "total" rows — everything else stays plain black & white.
+  if(data.section !== 'body') return;
+  const rowLabel = data.row.raw[0];
+  if(HIGHLIGHT_LABELS.has(rowLabel) && data.column.index === 1){
+    data.cell.styles.fillColor = [255, 242, 0]; // highlighter yellow
+    data.cell.styles.fontStyle = 'bold';
+    data.cell.styles.textColor = [0,0,0];
+  }
+}
+
+async function generateReport(){
+  const type = document.getElementById('report-type').value;
+  let start, end, label;
+  const today = todayStr();
+  if(type==='daily'){ start = end = document.getElementById('report-date').value || today; label='Daily Report'; }
+  else if(type==='weekly'){ end = today; start = daysAgoStr(6); label='Weekly Report'; }
+  else if(type==='15day'){ end = today; start = daysAgoStr(14); label='15-Day Report'; }
+  else if(type==='monthly'){ end = today; start = daysAgoStr(29); label='Monthly Report'; }
+  else { start = document.getElementById('report-start').value; end = document.getElementById('report-end').value; label='Custom Range Report'; }
+
+  if(!start || !end){ toast('Please choose a valid date range', 'error'); return; }
+
+  const dates = dateRangeArray(start, end);
+  const restaurantName = (await settingGet('RestaurantName','Kalaburagi Khanavali')) || 'Kalaburagi Khanavali';
+
+  let totalCash=0, totalUpi=0, totalCons=0, totalExp=0;
+  dates.forEach(d=>{
+    const {cash,upi} = dailyCashUpi(d);
+    totalCash+=cash; totalUpi+=upi;
+    totalCons += dailyConsumptionCost(d);
+    totalExp  += dailyExpensesTotal(d);
+  });
+  const dailySalary = dailySalaryTotal();
+  const dailyRent = dailyRentSync();
+  const totalSalary = dailySalary * dates.length;
+  const totalRent = dailyRent * dates.length;
+  const totalSales = totalCash + totalUpi;
+  const totalDeductions = totalCons + totalExp + totalSalary + totalRent;
+  const netProfit = totalSales - totalDeductions;
+
+  // Aggregated (not per-day) breakdowns keep this report to a single page
+  const expMap = {};
+  STATE.expenses.filter(e=>dates.includes(e.Date)).forEach(e=>{ expMap[e.Name]=(expMap[e.Name]||0)+Number(e.Amount||0); });
+
+  const usageMap = {};
+  STATE.usage.filter(u=>dates.includes(u.Date)).forEach(u=>{
+    const k = u.ItemName;
+    if(!usageMap[k]) usageMap[k] = {qty:0, cost:0, unit:''};
+    usageMap[k].qty += Number(u.QtyUsed)||0;
+    usageMap[k].cost += Number(u.TotalCost)||0;
+  });
+  STATE.inventory.forEach(b=>{ if(usageMap[b.ItemName]) usageMap[b.ItemName].unit = b.Unit; });
+
+  const inventoryRows = aggregatedInventory();
+
+  // ---------------- Build PDF — GST-invoice style, black & white ----------------
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 40, rightX = pageW - 40;
+  doc.setTextColor(0,0,0);
+
+  // Outer bordered header block, like a GST invoice masthead
+  doc.setDrawColor(0,0,0); doc.setLineWidth(1);
+  doc.rect(marginX, 36, rightX-marginX, 64);
+  doc.setFont('times','bold'); doc.setFontSize(17);
+  doc.text(restaurantName.toUpperCase(), marginX+12, 60);
+  doc.setFont('times','normal'); doc.setFontSize(9.5);
+  doc.text('Restaurant Profit & Loss Statement', marginX+12, 74);
+  doc.setFont('times','bold'); doc.setFontSize(9.5);
+  doc.text(label, rightX-12, 54, {align:'right'});
+  doc.setFont('times','normal'); doc.setFontSize(9);
+  doc.text('Period: ' + fmtDate(start) + '  to  ' + fmtDate(end), rightX-12, 68, {align:'right'});
+  doc.text('Generated: ' + fmtDate(todayStr()), rightX-12, 81, {align:'right'});
+  doc.line(marginX, 82, rightX, 82);
+
+  let y = 98;
+
+  // Summary particulars table — the only colour on the page is the yellow
+  // highlighter behind the key total figures, exactly like marking up an invoice.
+  doc.autoTable({
+    startY:y, margin:{left:marginX, right:marginX},
+    theme:'grid',
+    styles:{font:'times', fontSize:10, textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.6, cellPadding:4},
+    headStyles:{fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', lineWidth:0.8},
+    columnStyles:{0:{cellWidth: (rightX-marginX)*0.65}, 1:{cellWidth:(rightX-marginX)*0.35, halign:'right'}},
+    head:[['Particulars','Amount']],
+    body:[
+      ['Cash Collection', moneyPlain(totalCash)],
+      ['UPI Collection', moneyPlain(totalUpi)],
+      ['Total Sales (Cash + UPI)', moneyPlain(totalSales)],
+      ['Total Grocery Consumption', moneyPlain(totalCons)],
+      ['Total Other Expenses', moneyPlain(totalExp)],
+      ['Employee Salary (' + STATE.employees.length + ' staff x ' + dates.length + ' day(s))', moneyPlain(totalSalary)],
+      ['Rent (' + dates.length + ' day(s))', moneyPlain(totalRent)],
+      ['Total Salary + Rent', moneyPlain(totalSalary+totalRent)],
+      ['NET PROFIT / (LOSS)', moneyPlain(netProfit)]
+    ],
+    didParseCell: highlightAmountCells
+  });
+  y = doc.lastAutoTable.finalY + 14;
+
+  // Expense breakdown (aggregated by category — keeps report to one page)
+  doc.setFont('times','bold'); doc.setFontSize(10.5);
+  doc.text('Expense Breakdown', marginX, y);
+  y += 6;
+  doc.autoTable({
+    startY:y, margin:{left:marginX, right:marginX},
+    theme:'grid', styles:{font:'times', fontSize:9, textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.5, cellPadding:3.5},
+    headStyles:{fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', lineWidth:0.7},
+    columnStyles:{1:{halign:'right'}},
+    head:[['Category','Amount']],
+    body: Object.keys(expMap).length
+      ? capRows(Object.entries(expMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k, moneyPlain(v)]), 6, 1, 'categories')
+      : [['No expenses in this period', moneyPlain(0)]]
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // Grocery consumption, aggregated by item
+  doc.setFont('times','bold'); doc.setFontSize(10.5);
+  doc.text('Grocery Consumption (by item)', marginX, y);
+  y += 6;
+  doc.autoTable({
+    startY:y, margin:{left:marginX, right:marginX},
+    theme:'grid', styles:{font:'times', fontSize:9, textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.5, cellPadding:3.5},
+    headStyles:{fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', lineWidth:0.7},
+    columnStyles:{1:{halign:'right'}, 2:{halign:'right'}},
+    head:[['Item','Qty Used','Cost']],
+    body: Object.keys(usageMap).length
+      ? capRows(Object.entries(usageMap).sort((a,b)=>b[1].cost-a[1].cost).map(([k,v])=>[k, v.qty.toFixed(2)+' '+v.unit, moneyPlain(v.cost)]), 8, 2, 'items')
+      : [['No consumption in this period','—', moneyPlain(0)]]
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // Remaining inventory + employees side by side to conserve vertical space
+  const halfW = (rightX-marginX-16)/2;
+  doc.setFont('times','bold'); doc.setFontSize(10.5);
+  doc.text('Remaining Inventory', marginX, y);
+  doc.text('Staff Salary', marginX+halfW+16, y);
+  y += 6;
+  doc.autoTable({
+    startY:y, margin:{left:marginX, right:marginX+halfW+16},
+    theme:'grid', styles:{font:'times', fontSize:8.5, textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.5, cellPadding:3},
+    headStyles:{fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', lineWidth:0.7},
+    columnStyles:{1:{halign:'right'}},
+    head:[['Item','Remaining']],
+    body: inventoryRows.length
+      ? capRows(inventoryRows.map(i=>[i.ItemName, i.Remaining.toFixed(2)+' '+(i.Unit||'')]), 6, null, 'items')
+      : [['No inventory yet','—']],
+    tableWidth: halfW
+  });
+  const leftFinalY = doc.lastAutoTable.finalY;
+
+  doc.autoTable({
+    startY:y, margin:{left:marginX+halfW+16, right:marginX},
+    theme:'grid', styles:{font:'times', fontSize:8.5, textColor:[0,0,0], lineColor:[0,0,0], lineWidth:0.5, cellPadding:3},
+    headStyles:{fillColor:[255,255,255], textColor:[0,0,0], fontStyle:'bold', lineWidth:0.7},
+    columnStyles:{1:{halign:'right'}},
+    head:[['Employee','Monthly Salary']],
+    body: STATE.employees.length
+      ? capRows(STATE.employees.map(e=>[e.Name, moneyPlain(e.MonthlySalary)]), 6, 1, 'staff')
+      : [['No employees added','—']],
+    tableWidth: halfW
+  });
+  y = Math.max(leftFinalY, doc.lastAutoTable.finalY) + 16;
+
+  // Final net-profit strip — plain border box, yellow highlight on the figure only
+  doc.setDrawColor(0,0,0); doc.setLineWidth(1);
+  doc.rect(marginX, y, rightX-marginX, 34);
+  doc.setFont('times','bold'); doc.setFontSize(11.5);
+  doc.text('NET PROFIT / (LOSS) FOR PERIOD', marginX+10, y+22);
+  doc.setFillColor(255,242,0);
+  const stripW = 150;
+  doc.rect(rightX-stripW-10, y+7, stripW, 20, 'F');
+  doc.setDrawColor(0,0,0); doc.rect(rightX-stripW-10, y+7, stripW, 20);
+  doc.setFont('times','bold'); doc.setFontSize(11.5);
+  doc.text(moneyPlain(netProfit), rightX-10, y+22, {align:'right'});
+
+  y += 34 + 16;
+  doc.setFont('times','italic'); doc.setFontSize(8);
+  doc.setTextColor(80,80,80);
+  doc.text('This is a system-generated internal statement for ' + restaurantName + '. Not a tax invoice.', marginX, y);
+
+  const fileName = `${restaurantName.replace(/\s+/g,'_')}_${label.replace(/\s+/g,'_')}_${end}.pdf`;
+  doc.save(fileName);
+
+  const rep = {ID:uid(), Type:label, StartDate:start, EndDate:end, GeneratedOn: new Date().toISOString().slice(0,10)};
+  STATE.reports.push(rep); saveCache();
+  try{ await appendRow(SHEET_NAMES.reports, objToRow(SHEET_HEADERS.Reports, rep)); }catch(e){ console.error(e); }
+  renderReportsTable();
+  toast('Report generated: '+fileName, 'success');
+}
+
+/* ================================================================
+   SECTION 12 — EVENT WIRING
+   ================================================================ */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  loadConfig(); loadCache();
+  document.getElementById('cfg-apikey').value = CONFIG.apiKey;
+  document.getElementById('cfg-clientid').value = CONFIG.clientId;
+  document.getElementById('cfg-sheetid').value = CONFIG.spreadsheetId;
+  document.getElementById('sale-date').value = todayStr();
+  document.getElementById('exp-date').value = todayStr();
+  document.getElementById('cons-date').value = todayStr();
+  document.getElementById('pur-date').value = todayStr();
+  document.getElementById('report-date').value = todayStr();
+
+  updateSyncPill();
+  await renderAll();
+  switchView('dashboard');
+  if(sheetsConfigured()){ setTimeout(initGIS, 400); }
+
+  // Nav
+  document.getElementById('nav-list').addEventListener('click', e=>{
+    const btn = e.target.closest('.nav-item'); if(!btn) return;
+    switchView(btn.dataset.view);
+    closeDrawer();
+  });
+
+  // Mobile drawer (sidebar) toggle
+  function openDrawer(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('show'); }
+  function closeDrawer(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+  document.getElementById('btn-hamburger').addEventListener('click', openDrawer);
+  document.getElementById('sidebar-overlay').addEventListener('click', closeDrawer);
+
+  // Bottom app-nav (mobile)
+  document.getElementById('bottom-nav').addEventListener('click', e=>{
+    const btn = e.target.closest('.bn-item[data-view]'); if(!btn) return;
+    switchView(btn.dataset.view);
+  });
+  document.getElementById('bn-more').addEventListener('click', openDrawer);
+
+  document.getElementById('btn-signin').addEventListener('click', requestSignIn);
+  document.getElementById('btn-refresh').addEventListener('click', ()=>{
+    if(accessToken) loadAllFromSheets(); else { toast('Connect to Google Sheets to refresh from cloud', 'warn'); renderAll(); }
+  });
+
+  // Purchase modal
+  document.getElementById('btn-add-purchase').addEventListener('click', ()=> document.getElementById('modal-purchase').classList.remove('hidden'));
+  document.querySelectorAll('[data-close]').forEach(b=> b.addEventListener('click', ()=> document.getElementById(b.dataset.close).classList.add('hidden')));
+  function recalcCostUnit(){
+    const q = Number(document.getElementById('pur-qty').value)||0;
+    const p = Number(document.getElementById('pur-price').value)||0;
+    document.getElementById('pur-costunit').value = q>0 ? money(p/q) : '';
+  }
+  document.getElementById('pur-qty').addEventListener('input', recalcCostUnit);
+  document.getElementById('pur-price').addEventListener('input', recalcCostUnit);
+
+  document.getElementById('form-purchase').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name = document.getElementById('pur-name').value.trim();
+    if(!name){ toast('Item name is required', 'error'); return; }
+    await recordPurchase({
+      ItemName:name,
+      Category: document.getElementById('pur-category').value,
+      Unit: document.getElementById('pur-unit').value,
+      PurchasedQty: document.getElementById('pur-qty').value,
+      PurchasePrice: document.getElementById('pur-price').value,
+      PurchaseDate: document.getElementById('pur-date').value || todayStr()
+    });
+    document.getElementById('form-purchase').reset();
+    document.getElementById('pur-date').value = todayStr();
+    document.getElementById('modal-purchase').classList.add('hidden');
+    toast('Purchase recorded', 'success');
+    await renderAll();
+  });
+
+  document.getElementById('inv-search').addEventListener('input', renderInventory);
+
+  // Consumption
+  document.getElementById('cons-item').addEventListener('change', updateConsAvailable);
+  document.getElementById('form-consumption').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      await recordConsumption({
+        ItemName: document.getElementById('cons-item').value,
+        Date: document.getElementById('cons-date').value || todayStr(),
+        QtyUsed: document.getElementById('cons-qty').value,
+        Notes: document.getElementById('cons-notes').value
+      });
+      document.getElementById('form-consumption').reset();
+      document.getElementById('cons-date').value = todayStr();
+      toast('Consumption logged', 'success');
+      await renderAll();
+    }catch(err){ toast(err.message, 'error'); }
+  });
+
+  // Sales
+  document.getElementById('form-sales').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const row = {ID:uid(), Date: document.getElementById('sale-date').value || todayStr(), Cash:Number(document.getElementById('sale-cash').value)||0, UPI:Number(document.getElementById('sale-upi').value)||0};
+    STATE.sales.push(row); saveCache();
+    try{ await appendRow(SHEET_NAMES.sales, objToRow(SHEET_HEADERS.DailySales, row)); }catch(err){ toast('Saved locally; Sheets sync failed','warn'); }
+    document.getElementById('form-sales').reset();
+    document.getElementById('sale-date').value = todayStr();
+    toast('Sales saved', 'success');
+    await renderAll();
+  });
+
+  // Expenses
+  document.getElementById('exp-name').addEventListener('change', (e)=>{
+    document.getElementById('exp-custom-wrap').style.display = e.target.value==='__custom' ? 'block':'none';
+  });
+  document.getElementById('form-expense').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const nameSel = document.getElementById('exp-name').value;
+    const name = nameSel==='__custom' ? (document.getElementById('exp-custom').value.trim()||'Miscellaneous') : nameSel;
+    const row = {ID:uid(), Date: document.getElementById('exp-date').value || todayStr(), Name:name, Amount:Number(document.getElementById('exp-amount').value)||0, Notes:document.getElementById('exp-notes').value};
+    STATE.expenses.push(row); saveCache();
+    try{ await appendRow(SHEET_NAMES.expenses, objToRow(SHEET_HEADERS.DailyExpenses, row)); }catch(err){ toast('Saved locally; Sheets sync failed','warn'); }
+    document.getElementById('form-expense').reset();
+    document.getElementById('exp-date').value = todayStr();
+    document.getElementById('exp-custom-wrap').style.display='none';
+    toast('Expense saved', 'success');
+    await renderAll();
+  });
+
+  // Employees
+  document.getElementById('form-employee').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const row = {ID:uid(), Name: document.getElementById('emp-name').value.trim(), MonthlySalary:Number(document.getElementById('emp-salary').value)||0};
+    if(!row.Name){ toast('Employee name required', 'error'); return; }
+    STATE.employees.push(row); saveCache();
+    try{ await appendRow(SHEET_NAMES.employees, objToRow(SHEET_HEADERS.Employees, row)); }catch(err){ toast('Saved locally; Sheets sync failed','warn'); }
+    document.getElementById('form-employee').reset();
+    toast('Employee added', 'success');
+    await renderAll();
+  });
+
+  // Delete handlers (delegated) — removes locally; for sheet-of-record cleanliness we clear the row's key fields
+  document.addEventListener('click', async (e)=>{
+    const delSale = e.target.closest('[data-del-sale]');
+    const delExp = e.target.closest('[data-del-exp]');
+    const delEmp = e.target.closest('[data-del-emp]');
+    if(delSale){
+      STATE.sales = STATE.sales.filter(r=> r.ID !== delSale.dataset.id); saveCache();
+      try{ await updateRowAt(SHEET_NAMES.sales, Number(delSale.dataset.delSale), ['','','','']); }catch(err){}
+      renderSalesTable(); renderDashboard(); toast('Sale entry removed','success');
+    }
+    if(delExp){
+      STATE.expenses = STATE.expenses.filter(r=> r.ID !== delExp.dataset.id); saveCache();
+      try{ await updateRowAt(SHEET_NAMES.expenses, Number(delExp.dataset.delExp), ['','','','','']); }catch(err){}
+      renderExpensesTable(); renderDashboard(); toast('Expense removed','success');
+    }
+    if(delEmp){
+      STATE.employees = STATE.employees.filter(r=> r.ID !== delEmp.dataset.id); saveCache();
+      try{ await updateRowAt(SHEET_NAMES.employees, Number(delEmp.dataset.delEmp), ['','','']); }catch(err){}
+      renderEmployeesTable(); renderDashboard(); toast('Employee removed','success');
+    }
+  });
+
+  // Settings — restaurant/rent
+  document.getElementById('form-settings').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    await settingSet('RestaurantName', document.getElementById('set-name').value.trim() || 'Kalaburagi Khanavali');
+    await settingSet('MonthlyRent', Number(document.getElementById('set-rent').value)||0);
+    await settingSet('DefaultThreshold', Number(document.getElementById('set-threshold').value)||5);
+    toast('Settings saved', 'success');
+    await renderAll();
+  });
+
+  // Settings — Google config
+  document.getElementById('form-gconfig').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    CONFIG.apiKey = document.getElementById('cfg-apikey').value.trim();
+    CONFIG.clientId = document.getElementById('cfg-clientid').value.trim();
+    CONFIG.spreadsheetId = document.getElementById('cfg-sheetid').value.trim();
+    saveConfig();
+    updateSyncPill();
+    toast('Connection details saved. Click "Connect Sheets" to sign in.', 'success');
+    initGIS();
+  });
+  document.getElementById('btn-init-sheets').addEventListener('click', ensureSheetTabs);
+
+  // Export / Import
+  document.getElementById('btn-export').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(STATE, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'kalaburagi_khanavali_data_' + todayStr() + '.json'; a.click();
+  });
+  document.getElementById('btn-import').addEventListener('click', ()=> document.getElementById('file-import').click());
+  document.getElementById('file-import').addEventListener('change', (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        STATE = Object.assign(STATE, data);
+        saveCache();
+        toast('Data imported', 'success');
+        await renderAll();
+      }catch(err){ toast('Invalid JSON file', 'error'); }
+    };
+    reader.readAsText(file);
+  });
+
+  // Reports view field toggling
+  document.getElementById('report-type').addEventListener('change', (e)=>{
+    const v = e.target.value;
+    document.getElementById('report-date-wrap').style.display = v==='daily' ? 'block':'none';
+    document.getElementById('report-start-wrap').style.display = v==='custom' ? 'block':'none';
+    document.getElementById('report-end-wrap').style.display = v==='custom' ? 'block':'none';
+  });
+  document.getElementById('btn-generate-report').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btn-generate-report');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Generating…';
+    try{ await generateReport(); } catch(err){ console.error(err); toast('Report generation failed: '+err.message, 'error'); }
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i>Generate PDF Report';
+  });
+});
+</script>
+</body>
+</html>
