@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import PageHeader from "../../components/common/PageHeader";
 import SearchBar from "../../components/common/SearchBar";
@@ -14,174 +14,198 @@ import {
     deleteExpense,
 } from "../../services/expenseService";
 
+
 function ExpensesPage() {
+    // ==========================================================
+    // STATE
+    // ==========================================================
 
     const [search, setSearch] = useState("");
     const [open, setOpen] = useState(false);
-
-    const [
-        selectedExpense,
-        setSelectedExpense,
-    ] = useState(null);
+    const [selectedExpense, setSelectedExpense] = useState(null);
 
     const {
-        expenses,
+        expenses = [],
         loading,
         refreshExpenses,
     } = useExpenses();
 
 
     // ==========================================================
-    // SEARCH
+    // OPEN ADD EXPENSE DIALOG
     // ==========================================================
 
-    const filteredExpenses =
-        expenses.filter((expense) => {
+    const handleAddExpense = () => {
+        setSelectedExpense(null);
+        setOpen(true);
+    };
 
-            const searchText =
-                search.toLowerCase();
+
+    // ==========================================================
+    // CLOSE DIALOG
+    // ==========================================================
+
+    const handleCloseDialog = () => {
+        setOpen(false);
+        setSelectedExpense(null);
+    };
+
+
+    // ==========================================================
+    // SEARCH AND FILTER
+    // ==========================================================
+
+    const filteredExpenses = useMemo(() => {
+        const searchText = search.trim().toLowerCase();
+
+        if (!searchText) {
+            return expenses;
+        }
+
+        return expenses.filter((expense) => {
+            const expenseCode =
+                expense.expense_code?.toLowerCase() || "";
+
+            const category =
+                expense.category?.toLowerCase() || "";
+
+            const description =
+                expense.description?.toLowerCase() || "";
+
+            const projectId =
+                String(expense.project_id || "").toLowerCase();
+
+            const amount =
+                String(expense.amount || "").toLowerCase();
+
+            const expenseDate =
+                String(expense.expense_date || "").toLowerCase();
 
             return (
-                expense.expense_code
-                    ?.toLowerCase()
-                    .includes(searchText) ||
-
-                expense.category
-                    ?.toLowerCase()
-                    .includes(searchText) ||
-
-                expense.description
-                    ?.toLowerCase()
-                    .includes(searchText) ||
-
-                String(expense.project_id)
-                    .includes(searchText)
+                expenseCode.includes(searchText) ||
+                category.includes(searchText) ||
+                description.includes(searchText) ||
+                projectId.includes(searchText) ||
+                amount.includes(searchText) ||
+                expenseDate.includes(searchText)
             );
         });
+    }, [expenses, search]);
 
 
     // ==========================================================
-    // CREATE / UPDATE
+    // CREATE / UPDATE EXPENSE
     // ==========================================================
 
     const handleSubmit = async (data) => {
-
         try {
-
             if (selectedExpense) {
-
                 await updateExpense(
                     selectedExpense.id,
                     data
                 );
 
-                alert(
-                    "Expense Updated Successfully"
-                );
-
+                alert("Expense updated successfully.");
             } else {
-
                 await createExpense(data);
 
-                alert(
-                    "Expense Added Successfully"
-                );
+                alert("Expense added successfully.");
             }
 
-            setOpen(false);
-            setSelectedExpense(null);
+            handleCloseDialog();
 
             await refreshExpenses();
 
         } catch (error) {
-
             console.error(
                 "Expense operation failed:",
                 error
             );
 
-            alert(
+            const errorMessage =
                 error.response?.data?.detail ||
-                "Expense operation failed"
-            );
+                error.response?.data?.message ||
+                "Expense operation failed. Please try again.";
+
+            alert(errorMessage);
         }
     };
 
 
     // ==========================================================
-    // EDIT
+    // EDIT EXPENSE
     // ==========================================================
 
     const handleEdit = (expense) => {
-
         setSelectedExpense(expense);
         setOpen(true);
     };
 
 
     // ==========================================================
-    // DELETE
+    // DELETE EXPENSE
     // ==========================================================
 
     const handleDelete = async (expense) => {
+        const expenseName =
+            expense.expense_code || "this expense";
 
-        const confirmDelete =
-            window.confirm(
-                `Delete ${expense.expense_code}?`
-            );
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete ${expenseName}?`
+        );
 
         if (!confirmDelete) {
             return;
         }
 
         try {
-
-            await deleteExpense(
-                expense.id
-            );
+            await deleteExpense(expense.id);
 
             await refreshExpenses();
 
-            alert(
-                "Expense Deleted Successfully"
-            );
+            alert("Expense deleted successfully.");
 
         } catch (error) {
-
             console.error(
                 "Delete expense failed:",
                 error
             );
 
-            alert(
+            const errorMessage =
                 error.response?.data?.detail ||
-                "Failed to delete expense"
-            );
+                error.response?.data?.message ||
+                "Failed to delete expense. Please try again.";
+
+            alert(errorMessage);
         }
     };
 
 
+    // ==========================================================
+    // CLEAR SEARCH
+    // ==========================================================
+
+    const handleSearchChange = (event) => {
+        setSearch(event.target.value);
+    };
+
+
+    // ==========================================================
+    // UI
+    // ==========================================================
+
     return (
         <>
-
             <PageHeader
                 title="Expenses"
                 subtitle="Manage project expenses"
                 buttonText="Add Expense"
-                onClick={() => {
-
-                    setSelectedExpense(null);
-                    setOpen(true);
-                }}
+                onClick={handleAddExpense}
             />
 
             <SearchBar
                 value={search}
-                onChange={(e) =>
-                    setSearch(
-                        e.target.value
-                    )
-                }
+                onChange={handleSearchChange}
                 placeholder="Search expenses..."
             />
 
@@ -194,15 +218,10 @@ function ExpensesPage() {
 
             <ExpensesDialog
                 open={open}
-                handleClose={() => {
-
-                    setOpen(false);
-                    setSelectedExpense(null);
-                }}
+                handleClose={handleCloseDialog}
                 onSubmit={handleSubmit}
                 expense={selectedExpense}
             />
-
         </>
     );
 }

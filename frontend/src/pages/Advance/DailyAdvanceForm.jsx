@@ -9,16 +9,14 @@ import {
 
 import useEmployees from "../../hooks/useEmployees";
 
-
 function DailyAdvanceForm({
     onSubmit,
+    handleClose,
 }) {
-
     const {
         employees,
         loading: employeesLoading,
     } = useEmployees();
-
 
     const [formData, setFormData] = useState({
         employee_id: "",
@@ -27,27 +25,22 @@ function DailyAdvanceForm({
         reason: "",
     });
 
-
     const [errors, setErrors] = useState({});
-
 
     // ==========================================================
     // HANDLE CHANGE
     // ==========================================================
 
     const handleChange = (e) => {
-
         const {
             name,
             value,
         } = e.target;
 
-
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
-
 
         setErrors((prev) => ({
             ...prev,
@@ -55,89 +48,55 @@ function DailyAdvanceForm({
         }));
     };
 
-
     // ==========================================================
     // SUBMIT
     // ==========================================================
 
     const handleSubmit = (e) => {
-
         e.preventDefault();
-
 
         const newErrors = {};
 
-
         if (!formData.employee_id) {
-
             newErrors.employee_id =
                 "Please select an employee";
         }
-
 
         if (
             !formData.amount ||
             Number(formData.amount) <= 0
         ) {
-
             newErrors.amount =
                 "Amount must be greater than 0";
         }
 
-
         if (!formData.transaction_date) {
-
             newErrors.transaction_date =
                 "Transaction date is required";
         }
 
-
         setErrors(newErrors);
 
-
-        if (
-            Object.keys(newErrors).length > 0
-        ) {
-
+        if (Object.keys(newErrors).length > 0) {
             return;
         }
 
-
-        // ======================================================
-        // SEND DAILY ADVANCE
-        // ======================================================
-
         onSubmit({
-
-            employee_id:
-                Number(formData.employee_id),
-
+            employee_id: Number(formData.employee_id),
             advance_id: null,
-
-            amount:
-                Number(formData.amount),
-
-            transaction_date:
-                formData.transaction_date,
-
-            reason:
-                formData.reason || null,
+            amount: Number(formData.amount),
+            transaction_date: formData.transaction_date,
+            reason: formData.reason || null,
         });
     };
 
-
     return (
-
-        <form
-            onSubmit={handleSubmit}
-        >
-
+        <form onSubmit={handleSubmit}>
             <Grid
                 container
                 spacing={2}
                 sx={{ mt: 1 }}
             >
-
                 {/* ==================================================
                     EMPLOYEE
                 ================================================== */}
@@ -147,68 +106,39 @@ function DailyAdvanceForm({
                         xs: 12,
                     }}
                 >
-
                     <TextField
                         select
                         fullWidth
                         required
                         label="Employee"
                         name="employee_id"
-                        value={
-                            formData.employee_id
-                        }
-                        onChange={
-                            handleChange
-                        }
-                        disabled={
-                            employeesLoading
-                        }
-                        error={
-                            !!errors.employee_id
-                        }
+                        value={formData.employee_id}
+                        onChange={handleChange}
+                        disabled={employeesLoading}
+                        error={!!errors.employee_id}
                         helperText={
                             errors.employee_id ||
                             "Select the employee receiving the daily advance"
                         }
                     >
-
                         {employees.length === 0 ? (
-
-                            <MenuItem
-                                disabled
-                            >
+                            <MenuItem disabled>
                                 No employees available
                             </MenuItem>
-
                         ) : (
-
-                            employees.map(
-                                (employee) => (
-
-                                    <MenuItem
-                                        key={
-                                            employee.id
-                                        }
-                                        value={
-                                            employee.id
-                                        }
-                                    >
-
-                                        {employee.full_name}
-                                        {" - "}
-                                        {employee.employee_id}
-
-                                    </MenuItem>
-
-                                )
-                            )
-
+                            employees.map((employee) => (
+                                <MenuItem
+                                    key={employee.id}
+                                    value={employee.id}
+                                >
+                                    {employee.full_name}
+                                    {" - "}
+                                    {employee.employee_id}
+                                </MenuItem>
+                            ))
                         )}
-
                     </TextField>
-
                 </Grid>
-
 
                 {/* ==================================================
                     DAILY AMOUNT
@@ -220,7 +150,6 @@ function DailyAdvanceForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         required
@@ -228,26 +157,18 @@ function DailyAdvanceForm({
                         label="Daily Advance Amount"
                         name="amount"
                         placeholder="Example: 200"
-                        value={
-                            formData.amount
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.amount}
+                        onChange={handleChange}
                         inputProps={{
                             min: 1,
                         }}
-                        error={
-                            !!errors.amount
-                        }
+                        error={!!errors.amount}
                         helperText={
                             errors.amount ||
                             "Example: ₹200 for food"
                         }
                     />
-
                 </Grid>
-
 
                 {/* ==================================================
                     DATE
@@ -259,34 +180,25 @@ function DailyAdvanceForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         required
                         type="date"
                         label="Transaction Date"
                         name="transaction_date"
-                        value={
-                            formData.transaction_date
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.transaction_date}
+                        onChange={handleChange}
                         slotProps={{
                             inputLabel: {
                                 shrink: true,
                             },
                         }}
-                        error={
-                            !!errors.transaction_date
-                        }
+                        error={!!errors.transaction_date}
                         helperText={
                             errors.transaction_date
                         }
                     />
-
                 </Grid>
-
 
                 {/* ==================================================
                     REASON
@@ -297,7 +209,6 @@ function DailyAdvanceForm({
                         xs: 12,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         multiline
@@ -305,19 +216,13 @@ function DailyAdvanceForm({
                         label="Reason"
                         name="reason"
                         placeholder="Example: Food, Travel, Personal expense"
-                        value={
-                            formData.reason
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.reason}
+                        onChange={handleChange}
                     />
-
                 </Grid>
 
-
                 {/* ==================================================
-                    SAVE
+                    ACTION BUTTONS
                 ================================================== */}
 
                 <Grid
@@ -325,29 +230,71 @@ function DailyAdvanceForm({
                         xs: 12,
                     }}
                 >
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        type="submit"
+                    <Grid
+                        container
+                        spacing={2}
                         sx={{
                             mt: 1,
-                            py: 1.3,
-                            fontWeight: 700,
                         }}
                     >
+                        {/* CANCEL BUTTON */}
 
-                        SAVE DAILY ADVANCE
+                        <Grid
+                            size={{
+                                xs: 12,
+                                sm: 6,
+                            }}
+                        >
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                type="button"
+                                onClick={handleClose}
+                                sx={{
+                                    py: 1.3,
+                                    fontWeight: 700,
+                                    borderColor: "#dca522",
+                                    color: "#9a6b00",
+                                    "&:hover": {
+                                        borderColor: "#b8860b",
+                                        backgroundColor: "#fff8e5",
+                                    },
+                                }}
+                            >
+                                CANCEL
+                            </Button>
+                        </Grid>
 
-                    </Button>
+                        {/* SAVE BUTTON */}
 
+                        <Grid
+                            size={{
+                                xs: 12,
+                                sm: 6,
+                            }}
+                        >
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                type="submit"
+                                sx={{
+                                    py: 1.3,
+                                    fontWeight: 700,
+                                    backgroundColor: "#e3aa25",
+                                    color: "#211812",
+                                    "&:hover": {
+                                        backgroundColor: "#c99116",
+                                    },
+                                }}
+                            >
+                                SAVE DAILY ADVANCE
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </Grid>
-
             </Grid>
-
         </form>
     );
 }
-
 
 export default DailyAdvanceForm;

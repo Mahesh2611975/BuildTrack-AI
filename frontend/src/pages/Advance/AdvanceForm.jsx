@@ -1,106 +1,72 @@
-import {
-    useEffect,
-    useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import {
     Grid,
     TextField,
     Button,
     MenuItem,
+    Box,
 } from "@mui/material";
 
 import useEmployees from "../../hooks/useEmployees";
 
-
 function AdvanceForm({
+    advance = null,
     onSubmit,
-    advance,
+    onCancel,
 }) {
-
     const {
         employees,
         loading: employeesLoading,
     } = useEmployees();
 
+    const [formData, setFormData] = useState({
+        employee_id: "",
+        amount: "",
+        advance_date: "",
+        reason: "",
+    });
 
-    const [formData, setFormData] =
-        useState({
-            employee_id: "",
-            amount: "",
-            advance_date: "",
-            reason: "",
-            status: "Pending",
-        });
-
-
-    const [errors, setErrors] =
-        useState({});
-
+    const [errors, setErrors] = useState({});
 
     // ==========================================================
     // LOAD DATA FOR EDIT
     // ==========================================================
 
     useEffect(() => {
-
         if (advance) {
-
             setFormData({
-
-                employee_id:
-                    advance.employee_id,
-
-                amount:
-                    advance.amount,
-
-                advance_date:
-                    advance.advance_date,
-
-                reason:
-                    advance.reason || "",
-
-                status:
-                    advance.status || "Pending",
-
+                employee_id: advance.employee_id || "",
+                amount: advance.amount || "",
+                advance_date: advance.advance_date || "",
+                reason: advance.reason || "",
             });
-
         } else {
-
             setFormData({
-
                 employee_id: "",
                 amount: "",
                 advance_date: "",
                 reason: "",
-                status: "Pending",
-
             });
-
         }
 
         setErrors({});
-
     }, [advance]);
-
 
     // ==========================================================
     // HANDLE CHANGE
     // ==========================================================
 
     const handleChange = (e) => {
-
         const {
             name,
             value,
         } = e.target;
 
-
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
-
 
         setErrors((prev) => ({
             ...prev,
@@ -108,114 +74,58 @@ function AdvanceForm({
         }));
     };
 
-
     // ==========================================================
     // SUBMIT
     // ==========================================================
 
     const handleSubmit = (e) => {
-
         e.preventDefault();
-
 
         const newErrors = {};
 
-
         if (!formData.employee_id) {
-
             newErrors.employee_id =
                 "Please select an employee";
         }
-
 
         if (
             !formData.amount ||
             Number(formData.amount) <= 0
         ) {
-
             newErrors.amount =
                 "Amount must be greater than 0";
         }
 
-
         if (!formData.advance_date) {
-
             newErrors.advance_date =
                 "Advance date is required";
         }
 
-
         setErrors(newErrors);
 
-
-        if (
-            Object.keys(newErrors).length > 0
-        ) {
-
+        if (Object.keys(newErrors).length > 0) {
             return;
         }
 
+        const payload = {
+            employee_id: Number(formData.employee_id),
+            amount: Number(formData.amount),
+            advance_date: formData.advance_date,
+            reason: formData.reason || null,
+        };
 
-        // ------------------------------------------------------
-        // CREATE
-        // ------------------------------------------------------
-
-        if (!advance) {
-
-            onSubmit({
-
-                employee_id:
-                    Number(formData.employee_id),
-
-                amount:
-                    Number(formData.amount),
-
-                advance_date:
-                    formData.advance_date,
-
-                reason:
-                    formData.reason || null,
-
-            });
-
-            return;
-        }
-
-
-        // ------------------------------------------------------
-        // UPDATE
-        // ------------------------------------------------------
-
-        onSubmit({
-
-            amount:
-                Number(formData.amount),
-
-            advance_date:
-                formData.advance_date,
-
-            reason:
-                formData.reason || null,
-
-            status:
-                formData.status,
-
-        });
+        onSubmit(payload);
     };
 
-
     return (
-
-        <form
-            onSubmit={handleSubmit}
-        >
-
+        <form onSubmit={handleSubmit}>
             <Grid
                 container
                 spacing={2}
-                sx={{ mt: 1 }}
+                sx={{
+                    mt: 0.5,
+                }}
             >
-
                 {/* ==================================================
                     EMPLOYEE
                 ================================================== */}
@@ -225,73 +135,39 @@ function AdvanceForm({
                         xs: 12,
                     }}
                 >
-
                     <TextField
                         select
                         fullWidth
                         required
                         label="Employee"
                         name="employee_id"
-                        value={
-                            formData.employee_id
-                        }
-                        onChange={
-                            handleChange
-                        }
-                        disabled={
-                            !!advance ||
-                            employeesLoading
-                        }
-                        error={
-                            !!errors.employee_id
-                        }
+                        value={formData.employee_id}
+                        onChange={handleChange}
+                        disabled={employeesLoading}
+                        error={!!errors.employee_id}
                         helperText={
                             errors.employee_id ||
-                            (
-                                advance
-                                    ? "Employee cannot be changed"
-                                    : "Select the employee receiving the advance"
-                            )
+                            "Select the employee receiving the advance"
                         }
                     >
-
                         {employees.length === 0 ? (
-
-                            <MenuItem
-                                disabled
-                            >
+                            <MenuItem disabled>
                                 No employees available
                             </MenuItem>
-
                         ) : (
-
-                            employees.map(
-                                (employee) => (
-
-                                    <MenuItem
-                                        key={
-                                            employee.id
-                                        }
-                                        value={
-                                            employee.id
-                                        }
-                                    >
-
-                                        {employee.full_name}
-                                        {" - "}
-                                        {employee.employee_id}
-
-                                    </MenuItem>
-
-                                )
-                            )
-
+                            employees.map((employee) => (
+                                <MenuItem
+                                    key={employee.id}
+                                    value={employee.id}
+                                >
+                                    {employee.full_name}
+                                    {" - "}
+                                    {employee.employee_id}
+                                </MenuItem>
+                            ))
                         )}
-
                     </TextField>
-
                 </Grid>
-
 
                 {/* ==================================================
                     AMOUNT
@@ -303,7 +179,6 @@ function AdvanceForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         required
@@ -311,25 +186,18 @@ function AdvanceForm({
                         label="Advance Amount"
                         name="amount"
                         placeholder="Example: 10000"
-                        value={
-                            formData.amount
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.amount}
+                        onChange={handleChange}
                         inputProps={{
                             min: 1,
                         }}
-                        error={
-                            !!errors.amount
-                        }
+                        error={!!errors.amount}
                         helperText={
-                            errors.amount
+                            errors.amount ||
+                            "Enter the advance amount"
                         }
                     />
-
                 </Grid>
-
 
                 {/* ==================================================
                     DATE
@@ -341,34 +209,25 @@ function AdvanceForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         required
                         type="date"
                         label="Advance Date"
                         name="advance_date"
-                        value={
-                            formData.advance_date
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        value={formData.advance_date}
+                        onChange={handleChange}
                         slotProps={{
                             inputLabel: {
                                 shrink: true,
                             },
                         }}
-                        error={
-                            !!errors.advance_date
-                        }
+                        error={!!errors.advance_date}
                         helperText={
                             errors.advance_date
                         }
                     />
-
                 </Grid>
-
 
                 {/* ==================================================
                     REASON
@@ -380,76 +239,20 @@ function AdvanceForm({
                         md: 6,
                     }}
                 >
-
                     <TextField
                         fullWidth
                         multiline
-                        rows={3}
+                        rows={4}
                         label="Reason"
                         name="reason"
-                        placeholder="Enter reason for advance"
-                        value={
-                            formData.reason
-                        }
-                        onChange={
-                            handleChange
-                        }
+                        placeholder="Example: Salary advance, medical emergency"
+                        value={formData.reason}
+                        onChange={handleChange}
                     />
-
                 </Grid>
 
-
                 {/* ==================================================
-                    STATUS - EDIT ONLY
-                ================================================== */}
-
-                {advance && (
-
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 6,
-                        }}
-                    >
-
-                        <TextField
-                            select
-                            fullWidth
-                            label="Status"
-                            name="status"
-                            value={
-                                formData.status
-                            }
-                            onChange={
-                                handleChange
-                            }
-                        >
-
-                            <MenuItem value="Pending">
-                                Pending
-                            </MenuItem>
-
-                            <MenuItem value="Approved">
-                                Approved
-                            </MenuItem>
-
-                            <MenuItem value="Rejected">
-                                Rejected
-                            </MenuItem>
-
-                            <MenuItem value="Paid">
-                                Paid
-                            </MenuItem>
-
-                        </TextField>
-
-                    </Grid>
-
-                )}
-
-
-                {/* ==================================================
-                    SAVE
+                    BUTTONS
                 ================================================== */}
 
                 <Grid
@@ -457,32 +260,64 @@ function AdvanceForm({
                         xs: 12,
                     }}
                 >
-
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        type="submit"
+                    <Box
                         sx={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            gap: 1.5,
                             mt: 1,
-                            py: 1.3,
-                            fontWeight: 700,
+                            flexWrap: "wrap",
                         }}
                     >
+                        <Button
+                            type="button"
+                            onClick={onCancel}
+                            variant="outlined"
+                            sx={{
+                                minWidth: "120px",
+                                height: "44px",
+                                borderRadius: "24px",
+                                borderColor: "#dca323",
+                                color: "#8a6411",
+                                fontWeight: 600,
+                                textTransform: "none",
+                                "&:hover": {
+                                    borderColor: "#b98513",
+                                    backgroundColor: "#fff8e8",
+                                },
+                            }}
+                        >
+                            Cancel
+                        </Button>
 
-                        {advance
-                            ? "UPDATE ADVANCE"
-                            : "SAVE ADVANCE"}
-
-                    </Button>
-
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{
+                                minWidth: "180px",
+                                height: "44px",
+                                borderRadius: "24px",
+                                backgroundColor: "#e3a923",
+                                color: "#241812",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                boxShadow:
+                                    "0 3px 7px rgba(0, 0, 0, 0.18)",
+                                "&:hover": {
+                                    backgroundColor: "#c99216",
+                                },
+                            }}
+                        >
+                            {advance
+                                ? "Update Advance"
+                                : "Save Advance"}
+                        </Button>
+                    </Box>
                 </Grid>
-
             </Grid>
-
         </form>
-
     );
 }
-
 
 export default AdvanceForm;

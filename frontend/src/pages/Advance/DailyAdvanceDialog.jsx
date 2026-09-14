@@ -4,13 +4,11 @@ import DialogContent from "@mui/material/DialogContent";
 
 import DailyAdvanceForm from "./DailyAdvanceForm";
 
-
 function DailyAdvanceDialog({
     open,
     handleClose,
     onSubmit,
 }) {
-
     return (
         <Dialog
             open={open}
@@ -18,22 +16,18 @@ function DailyAdvanceDialog({
             fullWidth
             maxWidth="md"
         >
-
             <DialogTitle>
                 Add Daily Advance
             </DialogTitle>
 
             <DialogContent>
-
                 <DailyAdvanceForm
                     onSubmit={onSubmit}
+                    handleClose={handleClose}
                 />
-
             </DialogContent>
-
         </Dialog>
     );
 }
-
 
 export default DailyAdvanceDialog;
