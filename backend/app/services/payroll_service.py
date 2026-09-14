@@ -33,6 +33,7 @@ class PayrollService:
 
     # ==========================================================
     # INTERNAL HELPER
+    # GET MAIN ADVANCE RECOVERY TRANSACTIONS
     # ==========================================================
 
     @staticmethod
@@ -82,6 +83,54 @@ class PayrollService:
 
     # ==========================================================
     # INTERNAL HELPER
+    # GET DAILY ADVANCE TRANSACTIONS
+    # ==========================================================
+
+    @staticmethod
+    def _get_daily_advance_transactions(
+        db: Session,
+        employee_id: int,
+        start_date=None,
+        end_date=None,
+    ):
+        """
+        Get daily advance transactions for an employee.
+
+        Daily advances are identified by a transaction reason
+        containing the words 'daily advance'.
+        """
+
+        query = (
+            db.query(AdvanceTransaction)
+            .filter(
+                AdvanceTransaction.employee_id == employee_id,
+                AdvanceTransaction.reason.isnot(None),
+                AdvanceTransaction.reason.ilike("%daily advance%"),
+            )
+        )
+
+        if start_date is not None:
+            query = query.filter(
+                AdvanceTransaction.transaction_date >= start_date
+            )
+
+        if end_date is not None:
+            query = query.filter(
+                AdvanceTransaction.transaction_date < end_date
+            )
+
+        return (
+            query
+            .order_by(
+                AdvanceTransaction.transaction_date.asc(),
+                AdvanceTransaction.id.asc(),
+            )
+            .all()
+        )
+
+    # ==========================================================
+    # INTERNAL HELPER
+    # FIND MAIN ADVANCE
     # ==========================================================
 
     @staticmethod
@@ -137,18 +186,16 @@ class PayrollService:
                 db.query(Advance)
                 .filter(
                     Advance.employee_id == employee_id,
-
                     func.lower(
                         Advance.status
                     ).in_(
                         [
                             "pending",
-                            "approved",
                             "approve",
+                            "approved",
                             "partially paid",
                         ]
                     ),
-
                     Advance.remaining_amount > 0,
                 )
                 .order_by(
@@ -162,6 +209,7 @@ class PayrollService:
 
     # ==========================================================
     # INTERNAL HELPER
+    # CALCULATE MAIN ADVANCE REMAINING
     # ==========================================================
 
     @staticmethod
@@ -170,13 +218,13 @@ class PayrollService:
         advance: Advance,
     ):
         """
-        Calculate the real remaining advance.
+        Calculate the real remaining main advance.
 
         Formula:
 
             Original Advance
             -
-            All salary advance recovery transactions
+            All main advance recovery transactions
             =
             Remaining Advance
 
@@ -215,8 +263,7 @@ class PayrollService:
 
         remaining = round(
             max(
-                original_amount
-                - total_recovered,
+                original_amount - total_recovered,
                 0,
             ),
             2,
@@ -226,6 +273,7 @@ class PayrollService:
 
     # ==========================================================
     # INTERNAL HELPER
+    # SYNCHRONIZE MAIN ADVANCE BALANCE
     # ==========================================================
 
     @staticmethod
@@ -235,7 +283,7 @@ class PayrollService:
     ):
         """
         Synchronize Advance.remaining_amount and status
-        with the actual recovery transactions.
+        with actual main advance recovery transactions.
         """
 
         if advance is None:
@@ -364,7 +412,7 @@ class PayrollService:
         leave_days = attendance["leave_days"]
 
         # ======================================================
-        # TOTAL DAYS
+        # TOTAL DAYS IN SELECTED MONTH
         # ======================================================
 
         total_working_days = monthrange(
@@ -466,7 +514,7 @@ class PayrollService:
             )
 
         # ======================================================
-        # CURRENT MONTH RECOVERY TRANSACTIONS
+        # CURRENT MONTH MAIN ADVANCE RECOVERY TRANSACTIONS
         # ======================================================
 
         recovery_transactions = (
@@ -480,14 +528,39 @@ class PayrollService:
         )
 
         # ======================================================
-        # CURRENT MONTH RECOVERY
+        # CURRENT MONTH MAIN ADVANCE RECOVERY
         # ======================================================
 
-        advance_taken = round(
+        main_advance_recovered_this_month = round(
             sum(
                 float(transaction.amount or 0)
-                for transaction
-                in recovery_transactions
+                for transaction in recovery_transactions
+            ),
+            2,
+        )
+
+        # ======================================================
+        # CURRENT MONTH DAILY ADVANCE TRANSACTIONS
+        # ======================================================
+
+        daily_advance_transactions = (
+            PayrollService
+            ._get_daily_advance_transactions(
+                db,
+                employee_id,
+                month_start,
+                next_month_start,
+            )
+        )
+
+        # ======================================================
+        # TOTAL DAILY ADVANCE TAKEN DURING THE MONTH
+        # ======================================================
+
+        daily_advance_taken = round(
+            sum(
+                float(transaction.amount or 0)
+                for transaction in daily_advance_transactions
             ),
             2,
         )
@@ -506,7 +579,7 @@ class PayrollService:
         )
 
         # ======================================================
-        # CALCULATE REAL REMAINING ADVANCE
+        # CALCULATE REAL MAIN ADVANCE REMAINING
         # ======================================================
 
         if main_advance:
@@ -518,10 +591,8 @@ class PayrollService:
                 2,
             )
 
-            # IMPORTANT:
-            # Do NOT change the database here.
-            #
-            # We calculate the real value from transactions.
+            # Do not change database here.
+            # Calculate the real value from transactions.
             advance_remaining = (
                 PayrollService
                 ._calculate_advance_remaining(
@@ -541,20 +612,21 @@ class PayrollService:
 
         available_salary = round(
             max(
-                earned_salary
-                - normal_deductions,
+                earned_salary - normal_deductions,
                 0,
             ),
             2,
         )
 
         # ======================================================
-        # ADVANCE DEDUCTION
+        # MAIN ADVANCE RECOVERY DEDUCTION
         # ======================================================
 
+        # This deduction uses main advance recovery transactions.
+        # Daily advances are only displayed separately here.
         advance_deduction = round(
             min(
-                advance_taken,
+                main_advance_recovered_this_month,
                 available_salary,
             ),
             2,
@@ -565,8 +637,7 @@ class PayrollService:
         # ======================================================
 
         total_deductions = round(
-            normal_deductions
-            + advance_deduction,
+            normal_deductions + advance_deduction,
             2,
         )
 
@@ -576,8 +647,7 @@ class PayrollService:
 
         net_salary = round(
             max(
-                earned_salary
-                - total_deductions,
+                earned_salary - total_deductions,
                 0,
             ),
             2,
@@ -591,8 +661,15 @@ class PayrollService:
             main_advance_amount
         )
 
+        # Total daily advances taken during this payroll month.
+        payroll["daily_advance_taken"] = (
+            daily_advance_taken
+        )
+
+        # Keep advance_taken for existing database compatibility.
+        # This field represents main advance recovery.
         payroll["advance_taken"] = (
-            advance_taken
+            main_advance_recovered_this_month
         )
 
         payroll["advance_deduction"] = (
@@ -658,9 +735,8 @@ class PayrollService:
         4. Existing paid payroll:
            Reject.
 
-        5. Advance balance:
-           Synchronize remaining amount using actual
-           advance-recovery transactions.
+        5. Main advance balance:
+           Synchronize using main advance recovery transactions.
         """
 
         # ======================================================
@@ -709,7 +785,7 @@ class PayrollService:
         )
 
         # ======================================================
-        # SYNCHRONIZE ADVANCE BALANCE
+        # SYNCHRONIZE MAIN ADVANCE BALANCE
         # ======================================================
 
         if main_advance:
@@ -864,6 +940,7 @@ class PayrollService:
                 payroll_data["main_advance_amount"]
             )
 
+            # Store main advance recovery in existing field.
             existing_payroll.advance_taken = (
                 payroll_data["advance_taken"]
             )
@@ -898,8 +975,8 @@ class PayrollService:
                 datetime.now(timezone.utc)
             )
 
-            # Never set paid_at here.
-            # Saving payroll != paying salary.
+            # Saving payroll is not the same as paying salary.
+            existing_payroll.paid_at = None
 
             db.commit()
             db.refresh(existing_payroll)
@@ -1004,6 +1081,7 @@ class PayrollService:
                 payroll_data["main_advance_amount"]
             ),
 
+            # Existing database field stores main advance recovery.
             advance_taken=(
                 payroll_data["advance_taken"]
             ),
